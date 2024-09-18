@@ -19,7 +19,7 @@ class OnlineLesson:
     file: list[str] = None
 
     def __init__(self, file_path: str = ""):
-        if file_path == "":
+        if file_path != "":
             self.read_file(file_path)
 
     def read_file(self, file_path: str):
