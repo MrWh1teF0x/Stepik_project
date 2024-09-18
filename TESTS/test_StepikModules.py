@@ -1,4 +1,7 @@
+import re
+
 from src.Parse_Classes.OnlineTokens import OnlineLesson
+from src.Parse_Classes.RegExpFormats import *
 import pytest
 
 def test_Lesson_init():
@@ -25,3 +28,8 @@ def test_Lesson_init():
     # clear ----------------------------------------------------------------------
     a1 = OnlineLesson()
     assert a1.file is None
+
+def test_RegExp_check_format():
+    f1 = re.compile("c")
+    f2 = re.compile("wadwadwad")
+    f3 = format_lesson_id
