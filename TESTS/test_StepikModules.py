@@ -19,8 +19,8 @@ def test_Lesson_init():
     assert a1.file is None
     # correct call ---------------------------------------------------------------
     a1.read_file(r"D:\PyCharm Projects\Stepic_project\files\test.md")
-    assert a1.file == ["# This is a test file\n", "it is only used for testing purposes\n", "\n",
-                       "* 1\n", "* 2\n", "* 3\n", "\n", "### Header 3\n"]
+    assert a1.file == ["# This is a test file", "it is only used for testing purposes", "",
+                       "* 1", "* 2", "* 3", "", "\\n", "", "### Header 3"]
     # wrong call, file not changed -----------------------------------------------
     with pytest.warns(UserWarning):
         a1.read_file(r"")
@@ -28,6 +28,7 @@ def test_Lesson_init():
     # clear ----------------------------------------------------------------------
     a1 = OnlineLesson()
     assert a1.file is None
+
 
 def test_RegExp_check_format():
     f1 = re.compile("c")
