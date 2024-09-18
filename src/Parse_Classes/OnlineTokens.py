@@ -26,9 +26,9 @@ class OnlineLesson:
         try:
             self.file = open(file_path, "r+", encoding="UTF-8").readlines()
         except FileNotFoundError or FileExistsError:
-            warnings.warn(Warning("File not found or doesn't exists"), stacklevel=2)
+            warnings.warn(UserWarning("File not found or doesn't exist"), stacklevel=2)
         except Exception:
-            warnings.warn(UserWarning("Unknown Error in read_file()"))
+            warnings.warn(UserWarning("Unknown Error in read_file()"), stacklevel=2)
 
     def parse(self):
         pass
