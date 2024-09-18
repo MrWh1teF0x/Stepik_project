@@ -4,6 +4,7 @@ from src.Parse_Classes.OnlineTokens import OnlineLesson
 from src.Parse_Classes.RegExpFormats import *
 import pytest
 
+
 def test_Lesson_init():
     a1 = OnlineLesson()
 
@@ -34,3 +35,10 @@ def test_RegExp_check_format():
     f1 = re.compile("c")
     f2 = re.compile("wadwadwad")
     f3 = format_lesson_id
+
+    # TODO: add tests for f1, f2, f3
+
+
+def test_Lesson_parse():
+    # TODO: think of tests
+    pass
