@@ -1,7 +1,5 @@
-import re
-
 from src.Parse_Classes.OnlineTokens import OnlineLesson
-from src.Parse_Classes.RegExpFormats import *
+from src.RegExpFormats import *
 import pytest
 
 
