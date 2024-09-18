@@ -1,4 +1,4 @@
-from Parse_Classes.OnlineTokens import OnlineLesson
+from src.Parse_Classes.OnlineTokens import OnlineLesson
 import pytest
 
 def test_Lesson_init():
