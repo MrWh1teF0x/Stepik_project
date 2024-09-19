@@ -7,7 +7,6 @@ import src.Parse_Classes.RegExpFormats as REF
 from src.Parse_Classes.PageParsers import Page
 
 
-
 class OnlineStep:
     id: int = None
     position = None
@@ -60,3 +59,12 @@ class OnlineLesson:
                 self.steps.append(OnlineStep(step_markdown))
                 step_text = []
             step_markdown.append(line)
+
+    def add_step(self, step: OnlineStep, position: int = None):
+        if not (0 <= position <= len(self.steps) - 1):
+            raise IndexError("Wrong position of the step!")
+
+        if position is None:
+            self.steps.append(step)
+        else:
+            self.steps.insert(position, step)
