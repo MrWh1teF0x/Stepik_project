@@ -23,7 +23,6 @@ class StepikAPI:
         responce = requests.post(
             url=self.url, data=json.dumps(payload), headers=self.headers
         )
-        print(responce.text)
 
     def step_delete():
         pass
