@@ -1,5 +1,5 @@
 from src.Parse_Classes.OnlineTokens import OnlineLesson
-from src.RegExpFormats import *
+from src.PyParseFormats import *
 import pytest
 
 

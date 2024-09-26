@@ -1,6 +1,6 @@
 import warnings
 
-import src.RegExpFormats as REF
+import src.PyParseFormats as PPF
 from src.Parse_Classes.PageParsers import Page
 
 
@@ -41,9 +41,9 @@ class OnlineLesson:
                 return 0
             markdown = self.file
 
-        if REF.check_format(markdown[0], REF.format_lesson_name) is None:
+        if PPF.check_format(markdown[0], PPF.format_lesson_name) is None:
             warnings.warn(UserWarning("Lesson name is incorrect"), stacklevel=2)
-        if REF.check_format(markdown[2], REF.format_lesson_id):
+        if PPF.check_format(markdown[2], PPF.format_lesson_id):
             warnings.warn(UserWarning("Lesson id is incorrect"), stacklevel=2)
 
         self.id = int(markdown[2].split()[2])
@@ -52,7 +52,7 @@ class OnlineLesson:
         #   splits remaining markdown on steps
         step_markdown = [markdown[4]]
         for line in markdown[5:]:
-            if REF.check_format(line, REF.format_lesson_name) is None:
+            if PPF.check_format(line, PPF.format_lesson_name) is None:
                 self.steps.append(OnlineStep(step_markdown))
                 step_text = []
             step_markdown.append(line)
