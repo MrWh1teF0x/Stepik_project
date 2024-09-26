@@ -14,8 +14,7 @@ class StepikAPI:
         pass
 
     def step_create(self, payload: dict):
-
-        responce = requests.post(
+        requests.post(
             url=self.url, data=json.dumps(payload), headers=self.session.headers()
         )
 
@@ -23,9 +22,10 @@ class StepikAPI:
         pass
 
     def step_update(self, payload: dict, id: int):
-
-        responce = requests.put(
-            url=self.url + f"/{id}", data=json.dumps(payload), headers=self.headers
+        requests.put(
+            url=self.url + f"/{id}",
+            data=json.dumps(payload),
+            headers=self.session.headers(),
         )
 
     def fetch_objects():
