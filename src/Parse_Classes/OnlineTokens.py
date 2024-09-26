@@ -1,4 +1,5 @@
 import warnings
+from dataclasses import field, dataclass
 
 import src.PyParseFormats as PPF
 from src.Parse_Classes.PageParsers import Page
@@ -16,13 +17,14 @@ class OnlineStep:
         self.data = Page()
 
 
+@dataclass
 class OnlineLesson:
-    def __init__(self, file_path: str = ""):
-        self.id: int = -1
-        self.name: str = ""
-        self.steps: list[OnlineStep] = []
-        self.file: list[str] = []
+    id: int = -1
+    name: str = ""
+    steps: list[OnlineStep] = field(default_factory=list[OnlineStep])
+    file: list[str] = field(default_factory=list[str])
 
+    def __init__(self, file_path: str = ""):
         if file_path != "":
             self.read_file(file_path)
 
@@ -34,16 +36,16 @@ class OnlineLesson:
         except Exception:
             warnings.warn(UserWarning("Unknown Error in read_file()"), stacklevel=2)
 
-    def parse(self, markdown: list[str] = None):
+    def parse(self, markdown: list[str] | None = None):
         if markdown is None:
             if self.file is None:  # file wasn't loaded
                 warnings.warn(UserWarning("Nothing to parse"), stacklevel=2)
                 return 0
             markdown = self.file
 
-        if PPF.check_format(markdown[0], PPF.format_lesson_name) is None:
+        if not PPF.check_format(markdown[0], PPF.format_lesson_name):
             warnings.warn(UserWarning("Lesson name is incorrect"), stacklevel=2)
-        if PPF.check_format(markdown[2], PPF.format_lesson_id):
+        if not PPF.check_format(markdown[2], PPF.format_lesson_id):
             warnings.warn(UserWarning("Lesson id is incorrect"), stacklevel=2)
 
         self.id = int(markdown[2].split()[2])
