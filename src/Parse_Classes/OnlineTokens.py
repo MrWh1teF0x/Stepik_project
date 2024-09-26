@@ -17,12 +17,12 @@ class OnlineStep:
 
 
 class OnlineLesson:
-    id: int = None
-    name: str = None
-    steps: list[OnlineStep] = None
-    file: list[str] = None
-
     def __init__(self, file_path: str = ""):
+        self.id: int = -1
+        self.name: str = ""
+        self.steps: list[OnlineStep] = []
+        self.file: list[str] = []
+
         if file_path != "":
             self.read_file(file_path)
 
