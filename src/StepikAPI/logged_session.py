@@ -32,4 +32,8 @@ class LoggedSession:
         return self.__cookie
 
     def headers(self):
-        pass
+        return {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + self.__token,
+            "Cookie": self.__cookie,
+        }
