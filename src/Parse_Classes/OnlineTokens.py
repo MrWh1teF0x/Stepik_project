@@ -1,9 +1,7 @@
-import _io
 import warnings
+from dataclasses import field, dataclass
 
-
-from src.Parse_Classes.PageParsers import Page
-import src.Parse_Classes.RegExpFormats as REF
+import src.PyParseFormats as PPF
 from src.Parse_Classes.PageParsers import Page
 
 
@@ -20,11 +18,12 @@ class OnlineStep:
         self.data = Page()
 
 
+@dataclass
 class OnlineLesson:
-    id: int = None
-    name: str = None
-    steps: list[OnlineStep] = None
-    file: list[str] = None
+    id: int = -1
+    name: str = ""
+    steps: list[OnlineStep] = field(default_factory=list[OnlineStep])
+    file: list[str] = field(default_factory=list[str])
 
     def __init__(self, file_path: str = ""):
         if file_path != "":
@@ -38,16 +37,16 @@ class OnlineLesson:
         except Exception:
             warnings.warn(UserWarning("Unknown Error in read_file()"), stacklevel=2)
 
-    def parse(self, markdown: list[str] = None):
+    def parse(self, markdown: list[str] | None = None):
         if markdown is None:
             if self.file is None:  # file wasn't loaded
                 warnings.warn(UserWarning("Nothing to parse"), stacklevel=2)
                 return 0
             markdown = self.file
 
-        if REF.check_format(markdown[0], REF.format_lesson_name) is None:
+        if not PPF.check_format(markdown[0], PPF.format_lesson_name):
             warnings.warn(UserWarning("Lesson name is incorrect"), stacklevel=2)
-        if REF.check_format(markdown[2], REF.format_lesson_id):
+        if not PPF.check_format(markdown[2], PPF.format_lesson_id):
             warnings.warn(UserWarning("Lesson id is incorrect"), stacklevel=2)
 
         self.id = int(markdown[2].split()[2])
@@ -56,7 +55,7 @@ class OnlineLesson:
         #   splits remaining markdown on steps
         step_markdown = [markdown[4]]
         for line in markdown[5:]:
-            if REF.check_format(line, REF.format_lesson_name) is None:
+            if PPF.check_format(line, PPF.format_lesson_name) is None:
                 self.steps.append(OnlineStep(step_markdown))
                 step_text = []
             step_markdown.append(line)

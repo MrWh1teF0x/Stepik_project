@@ -1,7 +1,5 @@
-import re
-
 from src.Parse_Classes.OnlineTokens import OnlineLesson
-from src.Parse_Classes.RegExpFormats import *
+from src.PyParseFormats import *
 import pytest
 
 
@@ -11,7 +9,7 @@ def test_Lesson_init():
     # wrong calls ----------------------------------------------------------------
     assert a1.file is None
     with pytest.warns(UserWarning):
-        a1.read_file(r"D:\PyCharm Projects\Stepic_project\files\sadmple_1.md")
+        a1.read_file(r"..\files\sadmple_1.md")
     assert a1.file is None
     with pytest.warns(UserWarning):
         a1.read_file(r"D:\.md")
@@ -19,7 +17,7 @@ def test_Lesson_init():
         a1.read_file(r"")
     assert a1.file is None
     # correct call ---------------------------------------------------------------
-    a1.read_file(r"D:\PyCharm Projects\Stepic_project\files\test.md")
+    a1.read_file(r"..\files\test.md")
     assert a1.file == ["# This is a test file", "it is only used for testing purposes", "",
                        "* 1", "* 2", "* 3", "", "\\n", "", "### Header 3"]
     # wrong call, file not changed -----------------------------------------------
