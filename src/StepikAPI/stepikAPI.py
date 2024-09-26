@@ -7,13 +7,8 @@ class StepikAPI:
     session: LoggedSession = None
     url = "https://stepik.org/api/step-sources"
 
-    def __init__(self, session: LoggedSession, token: str, cookie: str) -> None:
+    def __init__(self, session: LoggedSession) -> None:
         self.session = session
-        self.headers = {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + token,
-            "Cookie": cookie,
-        }
 
     def login():
         pass
@@ -21,7 +16,7 @@ class StepikAPI:
     def step_create(self, payload: dict):
 
         responce = requests.post(
-            url=self.url, data=json.dumps(payload), headers=self.headers
+            url=self.url, data=json.dumps(payload), headers=self.session.headers()
         )
 
     def step_delete():
