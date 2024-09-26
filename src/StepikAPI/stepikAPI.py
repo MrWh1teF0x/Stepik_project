@@ -27,8 +27,11 @@ class StepikAPI:
     def step_delete():
         pass
 
-    def step_update():
-        pass
+    def step_update(self, payload: dict, id: int):
+
+        responce = requests.put(
+            url=self.url + f"/{id}", data=json.dumps(payload), headers=self.headers
+        )
 
     def fetch_objects():
         pass
