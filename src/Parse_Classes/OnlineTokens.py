@@ -12,8 +12,9 @@ class OnlineStep:
     position = None
     data: Page = None
 
-    def __init__(self, markdown: list[str] = None):
-        pass
+    def __init__(self, id: int, position: int, markdown: list[str] = None):
+        self.id = id
+        self.position = position
 
     def build_page(self, markdown: list[str]):
         self.data = Page()
@@ -22,7 +23,7 @@ class OnlineStep:
 class OnlineLesson:
     id: int = None
     name: str = None
-    steps: list[OnlineStep] = None
+    steps: list[OnlineStep] = []
     file: list[str] = None
 
     def __init__(self, file_path: str = ""):
@@ -60,11 +61,11 @@ class OnlineLesson:
                 step_text = []
             step_markdown.append(line)
 
-    def add_step(self, step: OnlineStep, position: int = None):
-        if not (0 <= position <= len(self.steps) - 1):
+    def add_step(self, step: OnlineStep, position: int = -1):
+        if not (0 <= position <= len(self.steps) - 1 or position == -1):
             raise IndexError("Wrong position of the step!")
 
-        if position is None:
+        if position == -1:
             self.steps.append(step)
         else:
             self.steps.insert(position, step)
