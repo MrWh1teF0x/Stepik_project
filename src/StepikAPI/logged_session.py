@@ -22,16 +22,16 @@ class LoggedSession:
         cookie_responce = requests.get(self.course_host)
         self.__cookie = f'csrftoken={cookie_responce.cookies["csrftoken"]}; sessionid={cookie_responce.cookies["sessionid"]}'
 
-    def request(self):
+    def request(self) -> None:
         pass
 
-    def token(self):
+    def token(self) -> str:
         return self.__token
 
-    def cookie(self):
+    def cookie(self) -> str:
         return self.__cookie
 
-    def headers(self):
+    def headers(self) -> dict:
         return {
             "Content-Type": "application/json",
             "Authorization": "Bearer " + self.__token,

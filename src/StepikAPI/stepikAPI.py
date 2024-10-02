@@ -1,6 +1,7 @@
 import requests
 import json
-from logged_session import LoggedSession
+from src.StepikAPI.logged_session import LoggedSession
+from src.Parse_Classes.OnlineTokens import OnlineStep
 
 
 class StepikAPI:
@@ -10,24 +11,28 @@ class StepikAPI:
     def __init__(self, session: LoggedSession) -> None:
         self.session = session
 
-    def login():
+    def login() -> None:
         pass
 
-    def step_create(self, payload: dict):
+    def step_create(self, payload: dict) -> OnlineStep:
         responce = requests.post(
             url=self.url, json=payload, headers=self.session.headers()
         )
-        return json.loads(responce.text)["step-sources"][0]["id"]
+
+        json_data = json.loads(responce.text)
+        return OnlineStep(
+            json_data["step-sources"][0]["id"], json_data["step-sources"][0]["position"]
+        )
 
     def step_delete():
         pass
 
-    def step_update(self, payload: dict, id: int):
-        requests.put(
+    def step_update(self, payload: dict, id: int) -> None:
+        responce = requests.put(
             url=self.url + f"/{id}",
             json=payload,
             headers=self.session.headers(),
         )
 
-    def fetch_objects():
+    def fetch_objects() -> None:
         pass
