@@ -24,8 +24,10 @@ class StepikAPI:
             json_data["step-sources"][0]["id"], json_data["step-sources"][0]["position"]
         )
 
-    def step_delete():
-        pass
+    def step_delete(self, id: int) -> None:
+        responce = requests.delete(
+            url=self.url + f"/{id}", headers=self.session.headers()
+        )
 
     def step_update(self, payload: dict, id: int) -> None:
         responce = requests.put(
