@@ -11,9 +11,6 @@ class StepikAPI:
     def __init__(self, session: LoggedSession) -> None:
         self.session = session
 
-    def login() -> None:
-        pass
-
     def step_create(self, payload: dict) -> OnlineStep:
         responce = requests.post(
             url=self.url, json=payload, headers=self.session.headers()
