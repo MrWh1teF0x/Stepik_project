@@ -1,16 +1,20 @@
-import _io
+import io
 import warnings
+import requests
+import json
 
 
 from src.Parse_Classes.PageParsers import Page
 import src.Parse_Classes.RegExpFormats as REF
 from src.Parse_Classes.PageParsers import Page
+from src.StepikAPI.logged_session import LoggedSession
 
 
 class OnlineStep:
     id: int = None
     position = None
     data: Page = None
+    payload: dict = None
 
     def __init__(self, id: int, position: int, markdown: list[str] = None):
         self.id = id
@@ -25,6 +29,7 @@ class OnlineLesson:
     name: str = None
     steps: list[OnlineStep] = []
     file: list[str] = None
+    url = "https://stepik.org/api/lessons"
 
     def __init__(self, file_path: str = ""):
         if file_path != "":
@@ -69,3 +74,19 @@ class OnlineLesson:
             self.steps.append(step)
         else:
             self.steps.insert(position, step)
+
+    def update(self, session: LoggedSession, steps: list[OnlineStep]) -> None:
+        responce = requests.get(url=f"{self.url}/{self.id}", headers=session.headers())
+
+        info = json.loads(responce.text)
+        url = "https://stepik.org/api/step-sources/"
+
+        for step_id in info["lessons"][0]["steps"]:
+            requests.delete(url=f"{url}{step_id}", headers=session.headers())
+
+        self.steps = steps
+        for step in self.steps:
+            responce = requests.post(
+                url=url, headers=session.headers(), json=step.payload
+            )
+            step.id = json.loads(responce.text)["step-sources"][0]["id"]
