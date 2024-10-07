@@ -1,7 +1,7 @@
 import requests
 import json
 from src.StepikAPI.logged_session import LoggedSession
-from src.Parse_Classes.OnlineTokens import OnlineStep
+from src.Parse_Classes.OnlineTokens import OnlineStep, OnlineLesson
 
 
 class StepikAPI:
@@ -15,7 +15,6 @@ class StepikAPI:
         responce = requests.post(
             url=self.url, json=payload, headers=self.session.headers()
         )
-
         json_data = json.loads(responce.text)
         return OnlineStep(
             json_data["step-sources"][0]["id"], json_data["step-sources"][0]["position"]
@@ -35,3 +34,8 @@ class StepikAPI:
 
     def fetch_objects() -> None:
         pass
+
+    @staticmethod
+    def get_session(self, client_id: str, client_secret: str) -> LoggedSession:
+        session = LoggedSession(client_id, client_secret)
+        return session
