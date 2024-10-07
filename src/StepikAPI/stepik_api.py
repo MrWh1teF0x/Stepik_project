@@ -36,6 +36,6 @@ class StepikAPI:
         pass
 
     @staticmethod
-    def get_session(self, client_id: str, client_secret: str) -> LoggedSession:
+    def get_session(client_id: str, client_secret: str) -> LoggedSession:
         session = LoggedSession(client_id, client_secret)
         return session
