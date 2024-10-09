@@ -11,12 +11,20 @@ from src.StepikAPI.logged_session import LoggedSession
 
 
 class OnlineStep:
+    lesson_id: int = None
     id: int = None
     position = None
     data: Page = None
     payload: dict = None
 
-    def __init__(self, id: int = -1, position: int = 0, markdown: list[str] = None):
+    def __init__(
+        self,
+        lesson_id: int,
+        id: int = -1,
+        position: int = 0,
+        markdown: list[str] = None,
+    ):
+        self.lesson_id = lesson_id
         self.id = id
         self.position = position
 
