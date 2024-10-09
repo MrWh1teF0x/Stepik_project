@@ -114,3 +114,12 @@ class OnlineLesson:
     def get_steps_ids(self, session: LoggedSession):
         responce = requests.get(url=f"{self.url}/{self.id}", headers=session.headers())
         return json.loads(responce.text)["lessons"][0]["steps"]
+
+
+class OnlineCourse:
+    id: int = None
+    lessons: list[OnlineLesson] = []
+    url = "https://stepik.org/api/courses"
+
+    def __init__(self, id: int):
+        self.id = id
