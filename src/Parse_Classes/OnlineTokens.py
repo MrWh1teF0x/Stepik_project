@@ -66,14 +66,17 @@ class OnlineLesson:
                 step_text = []
             step_markdown.append(line)
 
-    def add_step(self, step: OnlineStep, position: int = -1):
-        if not (0 <= position <= len(self.steps) - 1 or position == -1):
+    def add_step(self, step: OnlineStep, position: int = 0):
+        if not (0 <= position <= len(self.steps) - 1 or position == 0):
             raise IndexError("Wrong position of the step!")
 
-        if position == -1:
+        if position == 0 or position == -1:
             self.steps.append(step)
         else:
-            self.steps.insert(position, step)
+            if position > 0:
+                self.steps.insert(position - 1, step)
+            else:
+                self.steps.insert(position + 1, step)
 
     def update(self, session: LoggedSession, steps: list[OnlineStep]):
         url = "https://stepik.org/api/step-sources"
