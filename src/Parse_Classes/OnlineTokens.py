@@ -16,7 +16,7 @@ class OnlineStep:
     data: Page = None
     payload: dict = None
 
-    def __init__(self, id: int, position: int, markdown: list[str] = None):
+    def __init__(self, id: int = -1, position: int = 0, markdown: list[str] = None):
         self.id = id
         self.position = position
 
@@ -75,18 +75,31 @@ class OnlineLesson:
         else:
             self.steps.insert(position, step)
 
-    def update(self, session: LoggedSession, steps: list[OnlineStep]) -> None:
-        responce = requests.get(url=f"{self.url}/{self.id}", headers=session.headers())
+    def update(self, session: LoggedSession, steps: list[OnlineStep]):
+        url = "https://stepik.org/api/step-sources"
 
-        info = json.loads(responce.text)
-        url = "https://stepik.org/api/step-sources/"
+        old_step_ids = self.get_steps_ids(session)
 
-        for step_id in info["lessons"][0]["steps"]:
-            requests.delete(url=f"{url}{step_id}", headers=session.headers())
-
-        self.steps = steps
-        for step in self.steps:
-            responce = requests.post(
-                url=url, headers=session.headers(), json=step.payload
+        steps_for_delete = list(
+            set(old_step_ids).difference(set(step.id for step in steps))
+        )
+        for i in range(len(steps_for_delete)):
+            responce = requests.delete(
+                url=f"{url}/{steps_for_delete[i]}",
+                headers=session.headers(),
             )
-            step.id = json.loads(responce.text)["step-sources"][0]["id"]
+
+        for step in steps:
+            if step.id in old_step_ids:
+                responce = requests.put(
+                    url=f"{url}/{step.id}", json=step.payload, headers=session.headers()
+                )
+            else:
+                responce = requests.post(
+                    url=url, json=step.payload, headers=session.headers()
+                )
+                step.id = json.loads(responce.text)["step-sources"][0]["id"]
+
+    def get_steps_ids(self, session: LoggedSession):
+        responce = requests.get(url=f"{self.url}/{self.id}", headers=session.headers())
+        return json.loads(responce.text)["lessons"][0]["steps"]
