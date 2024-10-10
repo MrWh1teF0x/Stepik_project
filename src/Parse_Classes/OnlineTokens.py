@@ -152,8 +152,9 @@ class OnlineSection:
 
 class OnlineCourse:
     id: int = None
-    lessons: list[OnlineLesson] = []
+    sections: list[OnlineSection] = []
     url = "https://stepik.org/api/courses"
 
-    def __init__(self, id: int):
+    def __init__(self, id: int, sections: list[OnlineSection] = []):
         self.id = id
+        self.sections = sections
