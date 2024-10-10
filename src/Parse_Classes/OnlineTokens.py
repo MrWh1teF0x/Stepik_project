@@ -116,6 +116,40 @@ class OnlineLesson:
         return json.loads(responce.text)["lessons"][0]["steps"]
 
 
+class OnlineUnit:
+    section_id: int = None
+    lesson_id: int = None
+    id: int = None
+    url = "https://stepik.org/api/units"
+
+    def __init__(
+        self, section_id: int, lesson_id: int, id: int = None, position: int = None
+    ):
+        self.section_id = id
+        self.lesson_id = id
+        self.id = id
+
+
+class OnlineSection:
+    course_id: int = None
+    id: int = None
+    units: list[OnlineUnit] = None
+    position: int = None
+    url = "https://stepik.org/api/sections"
+
+    def __init__(
+        self,
+        course_id: int,
+        id: int = None,
+        position: int = None,
+        units: list[OnlineUnit] = [],
+    ):
+        self.course_id = course_id
+        self.id = id
+        self.position = position
+        self.units = units
+
+
 class OnlineCourse:
     id: int = None
     lessons: list[OnlineLesson] = []
