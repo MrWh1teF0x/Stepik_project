@@ -2,6 +2,7 @@ import io
 import warnings
 import requests
 import json
+from dataclasses import dataclass, field
 
 
 from src.Parse_Classes.PageParsers import Page
@@ -10,38 +11,28 @@ from src.Parse_Classes.PageParsers import Page
 from src.StepikAPI.logged_session import LoggedSession
 
 
+@dataclass
 class OnlineStep:
-    lesson_id: int = None
+    lesson_id: int
     id: int = None
-    position = None
+    position: int = None
     data: Page = None
-    payload: dict = None
-
-    def __init__(
-        self,
-        lesson_id: int,
-        id: int = -1,
-        position: int = 0,
-        markdown: list[str] = None,
-    ):
-        self.lesson_id = lesson_id
-        self.id = id
-        self.position = position
+    payload: dict = field(default_factory=dict)
 
     def build_page(self, markdown: list[str]):
         self.data = Page()
 
 
 class OnlineLesson:
+    file_path: str = ""
     id: int = None
-    name: str = None
-    steps: list[OnlineStep] = []
-    file: list[str] = None
-    url = "https://stepik.org/api/lessons"
+    name: str = ""
+    steps: list[OnlineStep] = field(default_factory=list)
+    file: list[str] = field(default_factory=list)
+    api_url = "https://stepik.org/api/lessons"
 
-    def __init__(self, file_path: str = ""):
-        if file_path != "":
-            self.read_file(file_path)
+    if file_path != "":
+        read_file(file_path)
 
     def read_file(self, file_path: str):
         try:
@@ -112,49 +103,31 @@ class OnlineLesson:
                 step.id = json.loads(responce.text)["step-sources"][0]["id"]
 
     def get_steps_ids(self, session: LoggedSession):
-        responce = requests.get(url=f"{self.url}/{self.id}", headers=session.headers())
+        responce = requests.get(
+            url=f"{self.api_url}/{self.id}", headers=session.headers()
+        )
         return json.loads(responce.text)["lessons"][0]["steps"]
 
 
+@dataclass
 class OnlineUnit:
-    section_id: int = None
-    lesson_id: int = None
+    section_id: int
+    lesson_id: int
     id: int = None
-    url = "https://stepik.org/api/units"
-
-    def __init__(
-        self, section_id: int, lesson_id: int, id: int = None, position: int = None
-    ):
-        self.section_id = id
-        self.lesson_id = id
-        self.id = id
+    api_url = "https://stepik.org/api/units"
 
 
+@dataclass
 class OnlineSection:
-    course_id: int = None
+    course_id: int
     id: int = None
-    units: list[OnlineUnit] = None
     position: int = None
-    url = "https://stepik.org/api/sections"
-
-    def __init__(
-        self,
-        course_id: int,
-        id: int = None,
-        position: int = None,
-        units: list[OnlineUnit] = [],
-    ):
-        self.course_id = course_id
-        self.id = id
-        self.position = position
-        self.units = units
+    units: list[OnlineUnit] = field(default_factory=list)
+    api_url = "https://stepik.org/api/sections"
 
 
+@dataclass
 class OnlineCourse:
-    id: int = None
-    sections: list[OnlineSection] = []
-    url = "https://stepik.org/api/courses"
-
-    def __init__(self, id: int, sections: list[OnlineSection] = []):
-        self.id = id
-        self.sections = sections
+    id: int
+    sections: list[OnlineSection] = field(default_factory=list)
+    api_url = "https://stepik.org/api/courses"
