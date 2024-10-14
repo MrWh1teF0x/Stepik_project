@@ -18,12 +18,11 @@ class OnlineStep:
         self.data = Page()
 
 
-@dataclass
 class OnlineLesson:
     id: int = -1
     name: str = ""
-    steps: list[OnlineStep] = field(default_factory=list[OnlineStep])
-    file: list[str] = field(default_factory=list[str])
+    steps: list[OnlineStep] = None  # field(default_factory=list[OnlineStep])
+    file: list[str] = None  # field(default_factory=list[str])
 
     def __init__(self, file_path: str = ""):
         if file_path != "":
