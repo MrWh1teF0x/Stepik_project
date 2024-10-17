@@ -71,4 +71,12 @@ class OnlineLesson:
         # parse for steps
         step_lines = PPF.search_format_in_text(markdown[id_token[0][1] + 1:], PPF.format_step_name)
         for i in range(len(step_lines) - 1):
-            print(i[0])
+            step_text = markdown[step_lines[i][1]:step_lines[i+1][1]]
+            new_step = self.create_step(step_text)
+            self.add_step(new_step, i)
+
+    def create_step(self, markdown: list[str]) -> OnlineStep:
+        pass
+
+    def add_step(self, step: OnlineStep, position: int = 0):
+        pass
