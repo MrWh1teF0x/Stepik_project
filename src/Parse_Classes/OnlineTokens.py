@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 
 
 from src.Parse_Classes.PageParsers import *
-import src.Parse_Classes.RegExpFormats as REF
+import src.PyParseFormats as PPF
 from src.StepikAPI.logged_session import LoggedSession as Session
 
 
@@ -17,6 +17,9 @@ class OnlineStep:
     id: int = None
     position: int = None
     api_url = "https://stepik.org/api/step-sources"
+
+    def identify_step(self, markdown: list[str]):
+        pass
 
     def build_page(self, markdown: list[str]):
         pass
@@ -63,46 +66,48 @@ class OnlineStep:
 
 @dataclass
 class OnlineLesson:
-    file_path: str = ""
     id: int = None
     name: str = ""
     steps: list[OnlineStep] = field(default_factory=list)
-    file: list[str] = field(default_factory=list)
     api_url = "https://stepik.org/api/lessons"
 
-    if file_path != "":
-        read_file(file_path)
+    def set_path(self, file_path: str):
+        self.f_path = file_path
 
-    def read_file(self, file_path: str):
+    def read_file(self, file_path: str) -> list[str]:
         try:
-            self.file = open(file_path, "r+", encoding="UTF-8").read().splitlines()
+            text_file = open(file_path, "r+", encoding="UTF-8").read().splitlines()
+            return text_file
         except FileNotFoundError or FileExistsError:
             warnings.warn(UserWarning("File not found or doesn't exist"), stacklevel=2)
         except Exception:
             warnings.warn(UserWarning("Unknown Error in read_file()"), stacklevel=2)
 
-    def parse(self, markdown: list[str] = None):
-        if markdown is None:
-            if self.file is None:  # file wasn't loaded
+        return []
+
+    def parse(self, f_path: str = ''):
+        # check if there is something to parse
+        if f_path is '':
+            if self.f_path is None:  # file wasn't loaded
                 warnings.warn(UserWarning("Nothing to parse"), stacklevel=2)
                 return 0
-            markdown = self.file
+            f_path = self.f_path
 
-        if REF.check_format(markdown[0], REF.format_lesson_name) is None:
+        markdown = self.read_file(f_path)
+
+        # parse for lesson_name and lesson_id
+        name_token = PPF.search_format_in_text(markdown, PPF.format_lesson_name)
+        if not name_token:
             warnings.warn(UserWarning("Lesson name is incorrect"), stacklevel=2)
-        if REF.check_format(markdown[2], REF.format_lesson_id):
+            return
+
+        id_token = PPF.search_format_in_text(markdown[name_token[0][1] + 1:], PPF.format_lesson_id)
+        if not id_token:
             warnings.warn(UserWarning("Lesson id is incorrect"), stacklevel=2)
+            return
 
-        self.id = int(markdown[2].split()[2])
-        self.name = markdown[0].split()[1]
-
-        #   splits remaining markdown on steps
-        step_markdown = [markdown[4]]
-        for line in markdown[5:]:
-            if REF.check_format(line, REF.format_lesson_name) is None:
-                self.steps.append(OnlineStep(step_markdown))
-                step_text = []
-            step_markdown.append(line)
+        self.name = name_token[0][0]["lesson_name"]
+        self.id = int(id_token[0][0]["lesson_id"])
 
     def add_step(self, step: OnlineStep, position: int = 0):
         if not (0 <= position <= len(self.steps) - 1 or position == 0):
