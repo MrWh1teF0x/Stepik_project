@@ -8,6 +8,7 @@ class TypeStep(ABC):
     title: str
     text: str
     json_data: dict = field(default_factory=dict)
+    cost: int = 0
 
     @abstractmethod
     def parse(self, markdown: list[str]) -> None:
@@ -20,9 +21,6 @@ class TypeStep(ABC):
 
 @dataclass
 class StepText(TypeStep):
-    title: str = ""
-    text: str = ""
-    json_data: dict = field(default_factory=dict)
 
     def __post_init__(self):
         self.json_data = {
@@ -30,7 +28,8 @@ class StepText(TypeStep):
                 "block": {
                     "name": "text",
                     "text": self.text,
-                }
+                },
+                "cost": self.cost,
             }
         }
 
@@ -43,11 +42,7 @@ class StepText(TypeStep):
 
 @dataclass
 class StepString(TypeStep):
-    title: str = ""
-    text: str = ""
     code: str = ""
-    cost: int = 0
-    json_data: dict = field(default_factory=dict)
 
     def __post_init__(self):
         self.json_data = {
@@ -72,12 +67,8 @@ class StepString(TypeStep):
 
 @dataclass
 class StepNumber(TypeStep):
-    title: str = ""
-    text: str = ""
     answer: float = None
-    max_error: float = None
-    cost: int = 0
-    json_data: dict = field(default_factory=dict)
+    max_error: float = 0
 
     def __post_init__(self):
         self.json_data = {
@@ -107,11 +98,7 @@ class StepNumber(TypeStep):
 
 @dataclass
 class StepQuiz(TypeStep):
-    title: str = ""
-    text: str = ""
     answers: list[tuple[str, bool]] = field(default_factory=list)
-    cost: int = 0
-    json_data: dict = field(default_factory=dict)
 
     def __post_init__(self):
         self.json_data = {
@@ -144,12 +131,8 @@ class StepQuiz(TypeStep):
 
 @dataclass
 class StepTask(TypeStep):
-    title: str = ""
-    text: str = ""
     code: str = ""
     test_cases: list[str] = field(default_factory=list)
-    cost: int = 0
-    json_data: dict = field(default_factory=dict)
 
     def __post_init__(self):
         self.json_data = {
