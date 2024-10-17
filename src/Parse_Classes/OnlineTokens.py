@@ -5,13 +5,13 @@ import src.PyParseFormats as PPF
 from src.Parse_Classes.PageParsers import Page
 
 
+@dataclass
 class OnlineStep:
+    lesson_id: int
+    step_data: TypeStep
     id: int = None
-    position = None
-    data: Page = None
-
-    def __init__(self, markdown: list[str] = None):
-        pass
+    position: int = None
+    api_url = "https://stepik.org/api/step-sources"
 
     def identify_step(self, markdown: list[str]):
         pass
@@ -22,6 +22,7 @@ class OnlineStep:
         self.data = Page()
 
 
+@dataclass
 class OnlineLesson:
     id: int = -1
     name: str = ""
