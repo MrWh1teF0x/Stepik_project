@@ -1,4 +1,3 @@
-import src.PyParseFormats as PPF
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 
@@ -7,21 +6,20 @@ from abc import ABC, abstractmethod
 class TypeStep(ABC):
     title: str
     text: str
-    json_data: dict = field(default_factory=dict)
     cost: int = 0
     lesson_id: int = -1
     id: int = -1
 
     @abstractmethod
-    def body(self):
+    def body(self) -> dict:
         pass
 
 
 @dataclass
 class StepText(TypeStep):
 
-    def __post_init__(self):
-        self.json_data = {
+    def body(self) -> dict:
+        return {
             "stepSource": {
                 "block": {
                     "name": "text",
@@ -32,16 +30,13 @@ class StepText(TypeStep):
             }
         }
 
-    def body(self):
-        pass
-
 
 @dataclass
 class StepString(TypeStep):
     code: str = ""
 
-    def __post_init__(self):
-        self.json_data = {
+    def body(self) -> dict:
+        return {
             "stepSource": {
                 "block": {
                     "name": "string",
@@ -55,17 +50,14 @@ class StepString(TypeStep):
             }
         }
 
-    def body(self):
-        pass
-
 
 @dataclass
 class StepNumber(TypeStep):
     answer: float = None
     max_error: float = 0
 
-    def __post_init__(self):
-        self.json_data = {
+    def body(self) -> dict:
+        return {
             "stepSource": {
                 "block": {
                     "name": "number",
@@ -84,16 +76,13 @@ class StepNumber(TypeStep):
             }
         }
 
-    def body(self):
-        pass
-
 
 @dataclass
 class StepQuiz(TypeStep):
     answers: list[tuple[str, bool]] = field(default_factory=list)
 
-    def __post_init__(self):
-        self.json_data = {
+    def body(self) -> dict:
+        return {
             "stepSource": {
                 "block": {
                     "name": "choice",
@@ -116,33 +105,25 @@ class StepQuiz(TypeStep):
             }
         }
 
-    def body(self):
-        pass
-
 
 @dataclass
 class StepTask(TypeStep):
     code: str = ""
     test_cases: list[str] = field(default_factory=list)
 
-    def __post_init__(self):
-        self.json_data = {
-            {
-                "stepSource": {
-                    "block": {
-                        "name": "code",
-                        "text": self.text,
-                        "source": {
-                            "code": self.code,
-                            "samples_count": len(self.test_cases),
-                            "test_cases": [self.test_cases],
-                        },
+    def body(self) -> dict:
+        return {
+            "stepSource": {
+                "block": {
+                    "name": "code",
+                    "text": self.text,
+                    "source": {
+                        "code": self.code,
+                        "samples_count": len(self.test_cases),
+                        "test_cases": [self.test_cases],
                     },
-                    "lesson_id": self.id,
-                    "cost": self.cost,
-                }
+                },
+                "lesson_id": self.id,
+                "cost": self.cost,
             }
         }
-
-    def body(self):
-        pass
