@@ -1,6 +1,6 @@
-from src.Parse_Classes.OnlineTokens import OnlineStep, OnlineLesson
+from Parse_Classes.online_tokens import OnlineStep, OnlineLesson
 
-from src.Parse_Classes.PageParsers import *
+from Parse_Classes.types_of_step import *
 from src.StepikAPI.stepik_api import StepikAPI, LoggedSession
 import json, requests, yaml
 

@@ -1,7 +1,7 @@
 import requests
 import json
 from src.StepikAPI.logged_session import LoggedSession
-from src.Parse_Classes.OnlineTokens import OnlineStep, OnlineLesson
+from Parse_Classes.online_tokens import OnlineStep, OnlineLesson
 
 
 class StepikAPI:

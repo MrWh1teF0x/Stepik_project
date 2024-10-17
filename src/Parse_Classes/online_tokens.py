@@ -5,7 +5,7 @@ import json
 from dataclasses import dataclass, field
 
 
-from src.Parse_Classes.PageParsers import *
+from Parse_Classes.types_of_step import *
 import src.PyParseFormats as PPF
 from src.StepikAPI.logged_session import LoggedSession as Session
 
@@ -85,9 +85,9 @@ class OnlineLesson:
 
         return []
 
-    def parse(self, f_path: str = ''):
+    def parse(self, f_path: str = ""):
         # check if there is something to parse
-        if f_path is '':
+        if f_path is "":
             if self.f_path is None:  # file wasn't loaded
                 warnings.warn(UserWarning("Nothing to parse"), stacklevel=2)
                 return 0
@@ -101,7 +101,9 @@ class OnlineLesson:
             warnings.warn(UserWarning("Lesson name is incorrect"), stacklevel=2)
             return
 
-        id_token = PPF.search_format_in_text(markdown[name_token[0][1] + 1:], PPF.format_lesson_id)
+        id_token = PPF.search_format_in_text(
+            markdown[name_token[0][1] + 1 :], PPF.format_lesson_id
+        )
         if not id_token:
             warnings.warn(UserWarning("Lesson id is incorrect"), stacklevel=2)
             return
