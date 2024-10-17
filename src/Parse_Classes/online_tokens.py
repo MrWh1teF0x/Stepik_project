@@ -10,13 +10,16 @@ import src.PyParseFormats as PPF
 from src.StepikAPI.logged_session import LoggedSession as Session
 
 
+host = "https://stepik.org"
+
+
 @dataclass
 class OnlineStep:
     lesson_id: int
     step_data: TypeStep
     id: int = None
     position: int = None
-    api_url = "https://stepik.org/api/step-sources"
+    url = f"{host}/api/step-sources"
 
     def identify_step(self, markdown: list[str]):
         pass
@@ -37,7 +40,7 @@ class OnlineStep:
         self.step_data.json_data["stepSource"]["position"] = self.position
 
         responce = requests.post(
-            url=self.api_url, json=self.step_data.json_data, headers=session.headers()
+            url=self.url, json=self.step_data.json_data, headers=session.headers()
         )
 
         json_data = json.loads(responce.text)
@@ -50,7 +53,7 @@ class OnlineStep:
         if step_data.json_data:
             self.step_data = step_data
         responce = requests.put(
-            url=f"{self.api_url}/{self.id}",
+            url=f"{self.url}/{self.id}",
             json=self.step_data.json_data,
             headers=session.headers(),
         )
@@ -58,7 +61,7 @@ class OnlineStep:
     def delete(self, session: Session):
         if self.id:
             responce = requests.delete(
-                url=f"{self.api_url}/{self.id}", headers=session.headers()
+                url=f"{self.url}/{self.id}", headers=session.headers()
             )
             self.id = None
             self.position = None
@@ -69,7 +72,7 @@ class OnlineLesson:
     id: int = None
     name: str = ""
     steps: list[OnlineStep] = field(default_factory=list)
-    api_url = "https://stepik.org/api/lessons"
+    url = f"{host}/api/lessons"
 
     def set_path(self, file_path: str):
         self.f_path = file_path
@@ -124,8 +127,6 @@ class OnlineLesson:
                 self.steps.insert(position + 1, step)
 
     def update(self, session: Session, steps: list[OnlineStep]):
-        url = "https://stepik.org/api/step-sources"
-
         new_step_ids = [step.id for step in steps]
         old_step_ids = []
 
@@ -142,9 +143,7 @@ class OnlineLesson:
                 step.update(session)
 
     def get_steps_ids(self, session: Session):
-        responce = requests.get(
-            url=f"{self.api_url}/{self.id}", headers=session.headers()
-        )
+        responce = requests.get(url=f"{self.url}/{self.id}", headers=session.headers())
         return json.loads(responce.text)["lessons"][0]["steps"]
 
 
@@ -153,7 +152,7 @@ class OnlineUnit:
     section_id: int
     lesson_id: int
     id: int = None
-    api_url = "https://stepik.org/api/units"
+    url = f"{host}/api/units"
 
 
 @dataclass
@@ -162,11 +161,11 @@ class OnlineSection:
     id: int = None
     position: int = None
     units: list[OnlineUnit] = field(default_factory=list)
-    api_url = "https://stepik.org/api/sections"
+    url = f"{host}/api/sections"
 
 
 @dataclass
 class OnlineCourse:
     id: int
     sections: list[OnlineSection] = field(default_factory=list)
-    api_url = "https://stepik.org/api/courses"
+    url = f"{host}/api/courses"
