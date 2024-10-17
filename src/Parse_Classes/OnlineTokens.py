@@ -5,24 +5,63 @@ import json
 from dataclasses import dataclass, field
 
 
-from src.Parse_Classes.PageParsers import Page
+from src.Parse_Classes.PageParsers import *
 import src.Parse_Classes.RegExpFormats as REF
-from src.Parse_Classes.PageParsers import Page
-from src.StepikAPI.logged_session import LoggedSession
+from src.StepikAPI.logged_session import LoggedSession as Session
 
 
 @dataclass
 class OnlineStep:
     lesson_id: int
+    step_data: TypeStep
     id: int = None
     position: int = None
-    data: Page = None
-    payload: dict = field(default_factory=dict)
+    api_url = "https://stepik.org/api/step-sources"
 
     def build_page(self, markdown: list[str]):
-        self.data = Page()
+        pass
+
+    def info(self, session: Session):
+        pass
+
+    def create(self, session: Session, step_data: TypeStep = None):
+        responce = None
+
+        if step_data:
+            self.step_data = step_data
+
+        self.step_data.json_data["stepSource"]["lesson"] = self.lesson_id
+        self.step_data.json_data["stepSource"]["position"] = self.position
+
+        responce = requests.post(
+            url=self.api_url, json=self.step_data.json_data, headers=session.headers()
+        )
+
+        json_data = json.loads(responce.text)
+        self.id = json_data["step-sources"][0]["id"]
+
+    def update(self, session: Session, step_data: TypeStep = None):
+        if self.id:
+            raise AttributeError("This step has no id!")
+
+        if step_data.json_data:
+            self.step_data = step_data
+        responce = requests.put(
+            url=f"{self.api_url}/{self.id}",
+            json=self.step_data.json_data,
+            headers=session.headers(),
+        )
+
+    def delete(self, session: Session):
+        if self.id:
+            responce = requests.delete(
+                url=f"{self.api_url}/{self.id}", headers=session.headers()
+            )
+            self.id = None
+            self.position = None
 
 
+@dataclass
 class OnlineLesson:
     file_path: str = ""
     id: int = None
@@ -77,32 +116,25 @@ class OnlineLesson:
             else:
                 self.steps.insert(position + 1, step)
 
-    def update(self, session: LoggedSession, steps: list[OnlineStep]):
+    def update(self, session: Session, steps: list[OnlineStep]):
         url = "https://stepik.org/api/step-sources"
 
-        old_step_ids = self.get_steps_ids(session)
+        new_step_ids = [step.id for step in steps]
+        old_step_ids = []
 
-        steps_for_delete = list(
-            set(old_step_ids).difference(set(step.id for step in steps))
-        )
-        for i in range(len(steps_for_delete)):
-            responce = requests.delete(
-                url=f"{url}/{steps_for_delete[i]}",
-                headers=session.headers(),
-            )
+        for old_step in self.steps:
+            if old_step.id not in new_step_ids:
+                old_step.delete(session)
+            else:
+                old_step_ids.append(old_step.id)
 
         for step in steps:
-            if step.id in old_step_ids:
-                responce = requests.put(
-                    url=f"{url}/{step.id}", json=step.payload, headers=session.headers()
-                )
+            if step.id not in old_step_ids:
+                step.create(session)
             else:
-                responce = requests.post(
-                    url=url, json=step.payload, headers=session.headers()
-                )
-                step.id = json.loads(responce.text)["step-sources"][0]["id"]
+                step.update(session)
 
-    def get_steps_ids(self, session: LoggedSession):
+    def get_steps_ids(self, session: Session):
         responce = requests.get(
             url=f"{self.api_url}/{self.id}", headers=session.headers()
         )
