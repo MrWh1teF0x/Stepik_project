@@ -1,12 +1,9 @@
-import io
-import warnings
 import requests
 import json
 from dataclasses import dataclass, field
 
 
 from Parse_Classes.types_of_step import *
-import src.PyParseFormats as PPF
 from src.StepikAPI.logged_session import LoggedSession as Session
 
 
