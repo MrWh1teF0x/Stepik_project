@@ -2,7 +2,6 @@ import pyparsing as pp
 # WARNING: pyparsing can cause errors with language coding (unicode) ----------------------------------------------- !!!
 import re
 
-
 class HiddenFormats:
     _unexpected = pp.SkipTo(pp.LineEnd(), include=True)("Unexpected_string")
     _hash_symb = pp.Literal('#')
@@ -20,7 +19,26 @@ format_lesson_name = HiddenFormats.f_les_name
 format_step_name = HiddenFormats.f_st_name
 
 
-def check_format(text: str, parse_exp: pp.ParserElement) -> bool:
+def search_format_in_text(text: list[str], parse_exp: pp.ParserElement, max_amount: int = 1):
+    ''':returns tuple(ParseResults, line_index, start_index_in_line, end_index_in_line)'''
+    if max_amount == 0:
+        return ()
+
+    ans = []
+    for line_i in range(len(text)):
+
+        res = tuple(parse_exp.scanString(text[line_i]))
+        if res != ():
+            for l_res in res:
+                ans.append((l_res[0], line_i, l_res[1], l_res[2]))  # (ParseRes(), line_i, token_start, token_end)
+                max_amount -= 1
+                if max_amount == 0:
+                    break
+
+    return ans
+
+
+def check_format(text: str, parse_exp: pp.ParserElement, from_start: bool = False) -> bool:
     result = parse_exp.runTests(text, comment=None, printResults=False)
     return result[0]
 

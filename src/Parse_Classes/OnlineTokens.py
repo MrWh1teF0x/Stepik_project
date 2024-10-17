@@ -5,7 +5,6 @@ import src.PyParseFormats as PPF
 from src.Parse_Classes.PageParsers import Page
 
 
-
 class OnlineStep:
     id: int = None
     position = None
@@ -23,38 +22,50 @@ class OnlineLesson:
     name: str = ""
     steps: list[OnlineStep] = None  # field(default_factory=list[OnlineStep])
     file: list[str] = None  # field(default_factory=list[str])
+    f_path: str = ""
 
     def __init__(self, file_path: str = ""):
-        if file_path != "":
-            self.read_file(file_path)
+        self.set_path(file_path)
 
-    def read_file(self, file_path: str):
+    def set_path(self, file_path: str):
+        self.f_path = file_path
+
+    def read_file(self, file_path: str) -> list[str]:
         try:
-            self.file = open(file_path, "r+", encoding="UTF-8").read().splitlines()
+            text_file = open(file_path, "r+", encoding="UTF-8").read().splitlines()
+            return text_file
         except FileNotFoundError or FileExistsError:
             warnings.warn(UserWarning("File not found or doesn't exist"), stacklevel=2)
         except Exception:
             warnings.warn(UserWarning("Unknown Error in read_file()"), stacklevel=2)
 
-    def parse(self, markdown: list[str] | None = None):
-        if markdown is None:
-            if self.file is None:  # file wasn't loaded
+        return []
+
+    def parse(self, f_path: str = ''):
+        # check if there is something to parse
+        if f_path is '':
+            if self.f_path is None:  # file wasn't loaded
                 warnings.warn(UserWarning("Nothing to parse"), stacklevel=2)
                 return 0
-            markdown = self.file
+            f_path = self.f_path
 
-        if not PPF.check_format(markdown[0], PPF.format_lesson_name):
+        markdown = self.read_file(f_path)
+
+        # parse for lesson_name and lesson_id
+        name_token = PPF.search_format_in_text(markdown, PPF.format_lesson_name)
+        if not name_token:
             warnings.warn(UserWarning("Lesson name is incorrect"), stacklevel=2)
-        if not PPF.check_format(markdown[2], PPF.format_lesson_id):
+            return
+
+        id_token = PPF.search_format_in_text(markdown[name_token[0][1] + 1:], PPF.format_lesson_id)
+        if not id_token:
             warnings.warn(UserWarning("Lesson id is incorrect"), stacklevel=2)
+            return
 
-        self.id = int(markdown[2].split()[2])
-        self.name = markdown[0].split()[1]
+        self.name = name_token[0][0]["lesson_name"]
+        self.id = int(id_token[0][0]["lesson_id"])
 
-        #   splits remaining markdown on steps
-        step_markdown = [markdown[4]]
-        for line in markdown[5:]:
-            if PPF.check_format(line, PPF.format_lesson_name) is None:
-                self.steps.append(OnlineStep(step_markdown))
-                step_text = []
-            step_markdown.append(line)
+        # parse for steps
+        step_lines = PPF.search_format_in_text(markdown[id_token[0][1] + 1:], PPF.format_step_name)
+        for i in range(len(step_lines) - 1):
+            print(i[0])
