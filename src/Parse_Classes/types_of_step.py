@@ -9,6 +9,8 @@ class TypeStep(ABC):
     text: str
     json_data: dict = field(default_factory=dict)
     cost: int = 0
+    lesson_id: int = -1
+    id: int = -1
 
     @abstractmethod
     def parse(self, markdown: list[str]) -> None:
@@ -29,6 +31,7 @@ class StepText(TypeStep):
                     "name": "text",
                     "text": self.text,
                 },
+                "lesson_id": self.id,
                 "cost": self.cost,
             }
         }
@@ -54,6 +57,7 @@ class StepString(TypeStep):
                         "code": self.code,
                     },
                 },
+                "lesson_id": self.id,
                 "cost": self.cost,
             }
         }
@@ -85,6 +89,7 @@ class StepNumber(TypeStep):
                         ]
                     },
                 },
+                "lesson_id": self.id,
                 "cost": self.cost,
             }
         }
@@ -118,7 +123,9 @@ class StepQuiz(TypeStep):
                         "preserve_order": False,
                         "is_options_feedback": False,
                     },
-                }
+                },
+                "lesson_id": self.id,
+                "cost": self.cost,
             }
         }
 
@@ -147,6 +154,7 @@ class StepTask(TypeStep):
                             "test_cases": [self.test_cases],
                         },
                     },
+                    "lesson_id": self.id,
                     "cost": self.cost,
                 }
             }
