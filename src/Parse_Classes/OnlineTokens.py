@@ -13,6 +13,9 @@ class OnlineStep:
     def __init__(self, markdown: list[str] = None):
         pass
 
+    def identify_step(self):
+        pass
+
     def build_page(self, markdown: list[str]):
         self.data = Page()
 

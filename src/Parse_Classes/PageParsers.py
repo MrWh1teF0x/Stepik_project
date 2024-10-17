@@ -8,8 +8,11 @@ class Page:
     def body(self):
         pass
 
+
 class PageText(Page):
-    pass
+    def parse(self, markdown: list[str]) -> None:
+        pass
+
 
 class PageChoice(Page):
     pass
