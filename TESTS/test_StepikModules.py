@@ -5,33 +5,37 @@ import pytest
 
 def test_Lesson_init():
     a1 = OnlineLesson()
-
     # wrong calls ----------------------------------------------------------------
-    # assert a1.file is None
-    # with pytest.warns(UserWarning):
-    #     a1.read_file(r"..\files\sadmple_1.md")
-    # assert a1.file is None
-    # with pytest.warns(UserWarning):
-    #     a1.read_file(r"D:\.md")
-    # with pytest.warns(UserWarning):
-    #     a1.read_file(r"")
-    # assert a1.file is None
-    # # correct call ---------------------------------------------------------------
-    # a1.read_file(r"..\files\test.md")
-    # assert a1.file == ["# This is a test file", "it is only used for testing purposes", "",
-    #                    "* 1", "* 2", "* 3", "", "\\n", "", "### Header 3"]
-    # # wrong call, file not changed -----------------------------------------------
-    # with pytest.warns(UserWarning):
-    #     a1.read_file(r"")
-    # assert a1.file is not None
-    # # clear ----------------------------------------------------------------------
-    # a1 = OnlineLesson()
-    # assert a1.file is None
+    assert a1.file is None
+    with pytest.warns(UserWarning):
+        a1_file = a1.read_file(r"..\files\sadmple_1.md")
+    assert a1_file == []
+    with pytest.warns(UserWarning):
+        a1_file = a1.read_file(r"D:\.md")
+    with pytest.warns(UserWarning):
+        a1_file = a1.read_file(r"")
+    assert a1_file == []
+    assert a1.f_path is ""
+    # correct call ---------------------------------------------------------------
+    a1_file = a1.read_file(r"..\files\test.md")
+    assert a1_file == ["# This is a test file", "it is only used for testing purposes", "",
+                       "* 1", "* 2", "* 3", "", "\\n", "", "### Header 3"]
+    # path set
+    a2 = OnlineLesson(r"..\files\test.md")
+    a1_file = a1.read_file(a2.f_path)
+
+    a1.f_path = r"..\files\sample_1.md"
+    a2_file = a2.read_file(a2.f_path)
+
+    assert a1_file == a2_file
+    assert a1.f_path != a2.f_path
+
+    a1.id = 2
+    assert a2.id != a1.id
 
 
 def test_PyParse_check_format():
     a_res = format_lesson_id.parseString("lesson = 123")
-    # нужен тест на пробелы
     assert a_res.asList() == ["lesson", '=', '123']
     assert a_res.asDict() == {'lesson_id': '123'}
     b_res = format_lesson_name.parseString("#    Lesson 1      ")
@@ -45,6 +49,8 @@ def test_PyParse_check_format():
     assert a[0]
     assert a[1][0][1].asList() == ['lesson', '=', '123']
     assert a[1][0][1].asDict() == {'lesson_id': '123'}
+    a_1 = format_lesson_name.runTests("  #   123123123", comment=None, printResults=False)
+    assert a[0]
 
     b = format_lesson_name.runTests("  #    Lesson 1      ", comment=None, printResults=False)
     assert b[0]
@@ -55,7 +61,35 @@ def test_PyParse_check_format():
     assert match_b[0][0].asList() == ['#', 'lesson 1 ']
     assert match_b[1][0].asList() == ['#', '123123123']
 
+    match_a = find_format("gibberish", format_lesson_name)
+    assert match_a == ()
 
-def test_Lesson_parse():
-    # TODO: think of tests
-    pass
+    text_a = ["# HEADER", "some text", "lesson = 123123123", "awaawdawd", "## Lesson1", "fussaweawefo"]
+    res_a = search_format_in_text(text_a, format_lesson_id)
+    assert 123123123 == int(res_a[0][0]["lesson_id"])
+
+# search_format_in_text (max_amount = 0)
+
+def test_Lesson_parse_id_and_name():
+    a1 = OnlineLesson(r"..\files\test.md")
+    a2 = OnlineLesson()
+    a3 = OnlineLesson(r"..\files\sample_2.md")
+    a4 = OnlineLesson()
+
+    with pytest.warns(UserWarning):
+        a1.parse()
+    assert a1.name == ""
+    assert a1.id == -1
+
+    a2.parse(r"..\files\sample_1.md")
+    assert a2.name == "Установка python"
+    assert a2.id == 483387
+
+    a3.parse(r"..\files\sample_2.md")
+    assert a3.name == "read, readline, readlines"
+    assert a3.id == 496523
+
+    with pytest.warns(UserWarning):
+        a4.parse()
+    assert a4.name == ""
+    assert a4.id == -1
