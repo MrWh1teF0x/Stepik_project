@@ -13,10 +13,6 @@ class TypeStep(ABC):
     id: int = -1
 
     @abstractmethod
-    def parse(self, markdown: list[str]) -> None:
-        pass
-
-    @abstractmethod
     def body(self):
         pass
 
@@ -35,9 +31,6 @@ class StepText(TypeStep):
                 "cost": self.cost,
             }
         }
-
-    def parse(self, markdown: list[str]) -> None:
-        pass
 
     def body(self):
         pass
@@ -61,9 +54,6 @@ class StepString(TypeStep):
                 "cost": self.cost,
             }
         }
-
-    def parse(self, markdown: list[str]) -> None:
-        pass
 
     def body(self):
         pass
@@ -93,9 +83,6 @@ class StepNumber(TypeStep):
                 "cost": self.cost,
             }
         }
-
-    def parse(self, markdown: list[str]) -> None:
-        pass
 
     def body(self):
         pass
@@ -129,9 +116,6 @@ class StepQuiz(TypeStep):
             }
         }
 
-    def parse(self, markdown: list[str]) -> None:
-        pass
-
     def body(self):
         pass
 
@@ -159,9 +143,6 @@ class StepTask(TypeStep):
                 }
             }
         }
-
-    def parse(self, markdown: list[str]) -> None:
-        pass
 
     def body(self):
         pass
