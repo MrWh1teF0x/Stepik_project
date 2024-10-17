@@ -21,12 +21,6 @@ class OnlineStep:
     position: int = None
     url = f"{host}/api/step-sources"
 
-    def identify_step(self, markdown: list[str]):
-        pass
-
-    def build_page(self, markdown: list[str]):
-        pass
-
     def info(self, session: Session):
         pass
 
@@ -73,46 +67,6 @@ class OnlineLesson:
     name: str = ""
     steps: list[OnlineStep] = field(default_factory=list)
     url = f"{host}/api/lessons"
-
-    def set_path(self, file_path: str):
-        self.f_path = file_path
-
-    def read_file(self, file_path: str) -> list[str]:
-        try:
-            text_file = open(file_path, "r+", encoding="UTF-8").read().splitlines()
-            return text_file
-        except FileNotFoundError or FileExistsError:
-            warnings.warn(UserWarning("File not found or doesn't exist"), stacklevel=2)
-        except Exception:
-            warnings.warn(UserWarning("Unknown Error in read_file()"), stacklevel=2)
-
-        return []
-
-    def parse(self, f_path: str = ""):
-        # check if there is something to parse
-        if f_path is "":
-            if self.f_path is None:  # file wasn't loaded
-                warnings.warn(UserWarning("Nothing to parse"), stacklevel=2)
-                return 0
-            f_path = self.f_path
-
-        markdown = self.read_file(f_path)
-
-        # parse for lesson_name and lesson_id
-        name_token = PPF.search_format_in_text(markdown, PPF.format_lesson_name)
-        if not name_token:
-            warnings.warn(UserWarning("Lesson name is incorrect"), stacklevel=2)
-            return
-
-        id_token = PPF.search_format_in_text(
-            markdown[name_token[0][1] + 1 :], PPF.format_lesson_id
-        )
-        if not id_token:
-            warnings.warn(UserWarning("Lesson id is incorrect"), stacklevel=2)
-            return
-
-        self.name = name_token[0][0]["lesson_name"]
-        self.id = int(id_token[0][0]["lesson_id"])
 
     def add_step(self, step: OnlineStep, position: int = 0):
         if not (0 <= position <= len(self.steps) - 1 or position == 0):
