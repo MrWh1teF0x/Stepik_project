@@ -1,3 +1,6 @@
+import src.PyParseFormats as PPF
+
+
 class Page:
     def __init__(self):
         pass
@@ -16,3 +19,6 @@ class PageText(Page):
 
 class PageChoice(Page):
     pass
+
+
+PAGE_DICT = {PPF.format_step_name: PageText}
