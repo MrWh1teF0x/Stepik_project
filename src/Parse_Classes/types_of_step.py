@@ -7,8 +7,9 @@ class TypeStep(ABC):
     title: str
     text: str
     cost: int = 0
-    lesson_id: int = -1
-    id: int = -1
+    lesson_id: int = None
+    position: int = None
+    id: int = None
 
     @abstractmethod
     def body(self) -> dict:
@@ -26,6 +27,7 @@ class StepText(TypeStep):
                     "text": self.text,
                 },
                 "lesson_id": self.id,
+                "position": self.position,
                 "cost": self.cost,
             }
         }
@@ -46,6 +48,7 @@ class StepString(TypeStep):
                     },
                 },
                 "lesson_id": self.id,
+                "position": self.position,
                 "cost": self.cost,
             }
         }
@@ -72,6 +75,7 @@ class StepNumber(TypeStep):
                     },
                 },
                 "lesson_id": self.id,
+                "position": self.position,
                 "cost": self.cost,
             }
         }
@@ -101,6 +105,7 @@ class StepQuiz(TypeStep):
                     },
                 },
                 "lesson_id": self.id,
+                "position": self.position,
                 "cost": self.cost,
             }
         }
@@ -124,6 +129,7 @@ class StepTask(TypeStep):
                     },
                 },
                 "lesson_id": self.id,
+                "position": self.position,
                 "cost": self.cost,
             }
         }
