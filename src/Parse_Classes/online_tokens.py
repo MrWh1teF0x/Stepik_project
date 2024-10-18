@@ -12,50 +12,37 @@ host = "https://stepik.org"
 
 @dataclass
 class OnlineStep:
-    lesson_id: int
     step_data: TypeStep
-    id: int = None
-    position: int = None
     url = f"{host}/api/step-sources"
 
     def info(self, session: Session):
         pass
 
     def create(self, session: Session, step_data: TypeStep = None):
-        responce = None
-
         if step_data:
             self.step_data = step_data
 
-        self.step_data.json_data["stepSource"]["lesson"] = self.lesson_id
-        self.step_data.json_data["stepSource"]["position"] = self.position
-
         responce = requests.post(
-            url=self.url, json=self.step_data.json_data, headers=session.headers()
+            url=self.url, json=self.step_data.body(), headers=session.headers()
         )
 
         json_data = json.loads(responce.text)
-        self.id = json_data["step-sources"][0]["id"]
+        self.step_data.id = json_data["step-sources"][0]["id"]
 
     def update(self, session: Session, step_data: TypeStep = None):
-        if self.id:
-            raise AttributeError("This step has no id!")
-
-        if step_data.json_data:
+        if step_data:
             self.step_data = step_data
         responce = requests.put(
-            url=f"{self.url}/{self.id}",
-            json=self.step_data.json_data,
+            url=f"{self.url}/{self.step_data.id}",
+            json=self.step_data.body(),
             headers=session.headers(),
         )
 
     def delete(self, session: Session):
-        if self.id:
-            responce = requests.delete(
-                url=f"{self.url}/{self.id}", headers=session.headers()
-            )
-            self.id = None
-            self.position = None
+        responce = requests.delete(
+            url=f"{self.url}/{self.step_data.id}", headers=session.headers()
+        )
+        self.step_data = None
 
 
 @dataclass
@@ -78,17 +65,17 @@ class OnlineLesson:
                 self.steps.insert(position + 1, step)
 
     def update(self, session: Session, steps: list[OnlineStep]):
-        new_step_ids = [step.id for step in steps]
+        new_step_ids = [step.step_data.id for step in steps]
         old_step_ids = []
 
         for old_step in self.steps:
-            if old_step.id not in new_step_ids:
+            if old_step.step_data.id not in new_step_ids:
                 old_step.delete(session)
             else:
-                old_step_ids.append(old_step.id)
+                old_step_ids.append(old_step.step_data.id)
 
         for step in steps:
-            if step.id not in old_step_ids:
+            if step.step_data.id not in old_step_ids:
                 step.create(session)
             else:
                 step.update(session)
