@@ -117,45 +117,33 @@ class LoggedSession:
         self.__cookie = f'csrftoken={cookie_responce.cookies["csrftoken"]}; sessionid={cookie_responce.cookies["sessionid"]}'
 
     def request(
-        self, method: TypeRequest, url, stacklevel=3, log_response_data=True, **kwargs
+        self,
+        method: TypeRequest,
+        url,
+        stacklevel: int = 3,
+        log_response_data: bool = True,
+        json_data: dict = None,
     ):
-        # stacklevel - up to stack call level: now, object_function, test_function
-        # logger.info(f'{method} {url}')
-        """old approach, since python 3.8 use stacklevel option
-        called_function_info = inspect.stack()[1]
-        extra = {
-            'filename': called_function_info.filename,
-            'lineno': called_function_info.lineno,
-            'funcName': called_function_info.function
-        }
-        """
         if self.log_url:
             logger.info(f"{method.value} {url}", stacklevel=stacklevel)
         if self.log_header:
             logger.info(
-                f"Request Headers: {json.dumps(kwargs.get('headers', None))}",
+                f"Request Headers: {json.dumps(self.headers())}",
                 stacklevel=stacklevel,
             )
-            if kwargs.get("cookies"):
-                logger.info(
-                    f"Request Cookies: {json.dumps(kwargs.get('cookies'))}",
-                    stacklevel=stacklevel,
-                )
+            logger.info(
+                f"Request Cookies: {json.dumps(self.cookie())}",
+                stacklevel=stacklevel,
+            )
 
         if self.log_data:
-            if "data" in kwargs:
-                logger.info(f"data = {str(kwargs['data'])}", stacklevel=stacklevel)
-            if "json" in kwargs:
-                logger.info(
-                    f"json = {json.dumps(kwargs['json'])}", stacklevel=stacklevel
-                )
+            logger.info(f"json = {json.dumps(json_data)}", stacklevel=stacklevel)
 
-        # verify=False only for disable ssl certificate check in stage.
         res = self.__session.request(
             method=method.value,
             url=url,
             verify=not self.ignore_ssl_certificate_errors,
-            **kwargs,
+            json=json_data,
         )
         if self.log_http_code:
             logger.info(f"Status Code: {res.status_code}", stacklevel=stacklevel)
