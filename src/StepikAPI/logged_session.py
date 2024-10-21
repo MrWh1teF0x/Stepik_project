@@ -4,6 +4,13 @@ import pathlib
 import logging
 import pathlib
 import yaml
+from enum import Enum
+
+
+class TypeRequest(Enum):
+    POST = "post"
+    GET = "get"
+    PUT = "put"
 
 
 path = pathlib.Path(__file__).parent.parent.parent / "cred.yaml"
