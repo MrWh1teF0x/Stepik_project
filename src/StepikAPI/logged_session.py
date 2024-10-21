@@ -11,6 +11,7 @@ class TypeRequest(Enum):
     POST = "post"
     GET = "get"
     PUT = "put"
+    DELETE = "delete"
 
 
 path = pathlib.Path(__file__).parent.parent.parent / "cred.yaml"
