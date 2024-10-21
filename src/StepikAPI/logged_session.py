@@ -32,7 +32,7 @@ LOGGER_NAME = "stepik"
 logger: logging.Logger = None
 
 
-def setup_logger(log_cli_level, log_file_level):
+def setup_logger(log_cli_level, log_file_level) -> None:
     """
     Use own logger for logging into out.log file and console(?)
     """
@@ -74,8 +74,27 @@ class LoggedSession:
     api_host = "https://stepik.org"
     course_host = "https://stepik.org/teach/courses"
 
-    def __init__(self, client_id="", client_secret="") -> None:
+    def __init__(
+        self,
+        log_url: bool = True,
+        log_header: bool = True,
+        log_data: bool = True,
+        log_http_code: bool = True,
+        log_resp_data=True,
+    ) -> None:
         self.__session = requests.Session()
+
+        # что именно логировать в запросе и ответе
+        self.log_url = log_url
+        self.log_header = log_header
+        self.log_data = log_data
+        self.log_http_code = log_http_code
+        self.log_resp_data = log_resp_data
+
+        # игнорировать ошибки ssl сертификата
+        self.ignore_ssl_certificate_errors = False
+
+        global client_id, client_secret
 
         # Получаем токен
         self.__auth = requests.auth.HTTPBasicAuth(client_id, client_secret)
