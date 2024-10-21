@@ -2,6 +2,30 @@ import requests
 import json
 import pathlib
 import logging
+import pathlib
+import yaml
+
+
+path = pathlib.Path(__file__).parent.parent.parent / "cred.yaml"
+client_id, client_secret = None, None
+
+
+def init_secret_fields() -> None:
+    try:
+        with path.open("r") as file:
+            s = yaml.load(file, yaml.SafeLoader)
+            global client_id, client_secret
+            client_id = s["client_id"]
+            client_secret = s["client_secret"]
+
+    except FileExistsError:
+        print('File "cred.yaml" does not exist!')
+
+    except KeyError:
+        print('There are no variables "client_id" or "client_secret"!')
+
+    except Exception as e:
+        print(e)
 
 
 LOGGER_NAME = "stepik"
