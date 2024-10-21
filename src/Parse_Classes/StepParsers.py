@@ -1,21 +1,21 @@
+from dataclasses import field, dataclass
 import src.PyParseFormats as PPF
+import warnings
 
 
-class Page:
-    def __init__(self):
-        pass
-
-    @abstractmethod
-    def body(self):
-        pass
-
-
-@dataclass
-class StepText(TypeStep):
+class TypeStep:
     title: str = ""
     text: str = ""
     json_data: dict = field(default_factory=dict)
 
+    def __init__(self):
+        pass
+
+    def body(self):
+        pass
+
+
+class StepText(TypeStep):
     def __post_init__(self):
         self.json_data = {
             "stepSource": {
@@ -33,18 +33,6 @@ class StepText(TypeStep):
         pass
 
 
-class PageText(Page):
-    def parse(self, markdown: list[str]) -> None:
-        pass
-
-
-class PageChoice(Page):
-    pass
-
-
-PAGE_DICT = {PPF.format_step_name: PageText}
-
-@dataclass
 class StepString(TypeStep):
     title: str = ""
     text: str = ""
@@ -73,7 +61,6 @@ class StepString(TypeStep):
         pass
 
 
-@dataclass
 class StepNumber(TypeStep):
     title: str = ""
     text: str = ""
@@ -108,7 +95,6 @@ class StepNumber(TypeStep):
         pass
 
 
-@dataclass
 class StepQuiz(TypeStep):
     title: str = ""
     text: str = ""
@@ -145,7 +131,6 @@ class StepQuiz(TypeStep):
         pass
 
 
-@dataclass
 class StepTask(TypeStep):
     title: str = ""
     text: str = ""
@@ -156,7 +141,6 @@ class StepTask(TypeStep):
 
     def __post_init__(self):
         self.json_data = {
-            {
                 "stepSource": {
                     "block": {
                         "name": "code",
@@ -170,7 +154,6 @@ class StepTask(TypeStep):
                     "cost": self.cost,
                 }
             }
-        }
 
     def parse(self, markdown: list[str]) -> None:
         pass

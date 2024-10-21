@@ -1,12 +1,11 @@
-from src.Parse_Classes.OnlineTokens import OnlineLesson
+from src.Parse_Classes.LessonParsers import Lesson
 from src.PyParseFormats import *
 import pytest
 
 
 def test_Lesson_init():
-    a1 = OnlineLesson()
+    a1 = Lesson()
     # wrong calls ----------------------------------------------------------------
-    assert a1.file is None
     with pytest.warns(UserWarning):
         a1_file = a1.read_file(r"..\files\sadmple_1.md")
     assert a1_file == []
@@ -21,7 +20,7 @@ def test_Lesson_init():
     assert a1_file == ["# This is a test file", "it is only used for testing purposes", "",
                        "* 1", "* 2", "* 3", "", "\\n", "", "### Header 3"]
     # path set
-    a2 = OnlineLesson(r"..\files\test.md")
+    a2 = Lesson(r"..\files\test.md")
     a1_file = a1.read_file(a2.f_path)
 
     a1.f_path = r"..\files\sample_1.md"
@@ -71,10 +70,10 @@ def test_PyParse_check_format():
 # search_format_in_text (max_amount = 0)
 
 def test_Lesson_parse_id_and_name():
-    a1 = OnlineLesson(r"..\files\test.md")
-    a2 = OnlineLesson()
-    a3 = OnlineLesson(r"..\files\sample_2.md")
-    a4 = OnlineLesson()
+    a1 = Lesson(r"..\files\test.md")
+    a2 = Lesson()
+    a3 = Lesson(r"..\files\sample_2.md")
+    a4 = Lesson()
 
     with pytest.warns(UserWarning):
         a1.parse()

@@ -1,33 +1,14 @@
-import warnings
-from dataclasses import field, dataclass
-
+from src.Parse_Classes.StepParsers import *
 import src.PyParseFormats as PPF
-from src.Parse_Classes.PageParsers import Page
 
 
-@dataclass
-class OnlineStep:
-    lesson_id: int
-    step_data: TypeStep
-    id: int = None
-    position: int = None
-    api_url = "https://stepik.org/api/step-sources"
-
-    def identify_step(self, markdown: list[str]):
-        pass
-
-    def build_page(self, markdown: list[str]):
-        self.identify_step(markdown)
-
-        self.data = Page()
+STEP_MAP = {PPF.format_step_name: StepText}
 
 
-@dataclass
-class OnlineLesson:
+class Lesson:
     id: int = -1
     name: str = ""
-    steps: list[OnlineStep] = None  # field(default_factory=list[OnlineStep])
-    file: list[str] = None  # field(default_factory=list[str])
+    steps: list[TypeStep] = field(default_factory=list[TypeStep])
     f_path: str = ""
 
     def __init__(self, file_path: str = ""):
@@ -74,12 +55,15 @@ class OnlineLesson:
         # parse for steps
         step_lines = PPF.search_format_in_text(markdown[id_token[0][1] + 1:], PPF.format_step_name)
         for i in range(len(step_lines) - 1):
-            step_text = markdown[step_lines[i][1]:step_lines[i+1][1]]
+            step_text = markdown[step_lines[i][1]:step_lines[ i +1][1]]
             new_step = self.create_step(step_text)
             self.add_step(new_step, i)
 
-    def create_step(self, markdown: list[str]) -> OnlineStep:
+    def identify_step(self, markdown: list[str]):
         pass
 
-    def add_step(self, step: OnlineStep, position: int = 0):
+    def create_step(self, markdown: list[str]) -> TypeStep:
+        pass
+
+    def add_step(self, step: TypeStep, position: int = 0):
         pass
