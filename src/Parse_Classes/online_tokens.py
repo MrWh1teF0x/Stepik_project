@@ -83,8 +83,9 @@ class OnlineLesson:
             else:
                 step.update()
 
-    def get_steps_ids(self, session: Session):
-        responce = requests.get(url=f"{self.url}/{self.id}", headers=session.headers())
+    def get_steps_ids(self):
+        session = Session()
+        responce = session.request(TypeRequest.GET, url=f"{self.url}/{self.id}")
         return json.loads(responce.text)["lessons"][0]["steps"]
 
 
