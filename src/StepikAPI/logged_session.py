@@ -124,7 +124,7 @@ class LoggedSession:
         stacklevel: int = 3,
         log_response_data: bool = True,
         json_data: dict = None,
-    ):
+    ) -> requests.Response:
         if self.log_url:
             logger.info(f"{method.value} {url}", stacklevel=stacklevel)
         if self.log_header:
