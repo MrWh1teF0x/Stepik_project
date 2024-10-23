@@ -26,7 +26,7 @@ class StepText(TypeStep):
                     "name": "text",
                     "text": self.text,
                 },
-                "lesson_id": self.id,
+                "lesson_id": self.lesson_id,
                 "position": self.position,
                 "cost": self.cost,
             }
@@ -47,7 +47,7 @@ class StepString(TypeStep):
                         "code": self.code,
                     },
                 },
-                "lesson_id": self.id,
+                "lesson_id": self.lesson_id,
                 "position": self.position,
                 "cost": self.cost,
             }
@@ -74,7 +74,7 @@ class StepNumber(TypeStep):
                         ]
                     },
                 },
-                "lesson_id": self.id,
+                "lesson_id": self.lesson_id,
                 "position": self.position,
                 "cost": self.cost,
             }
@@ -104,7 +104,7 @@ class StepQuiz(TypeStep):
                         "is_options_feedback": False,
                     },
                 },
-                "lesson_id": self.id,
+                "lesson_id": self.lesson_id,
                 "position": self.position,
                 "cost": self.cost,
             }
@@ -128,7 +128,7 @@ class StepTask(TypeStep):
                         "test_cases": [self.test_cases],
                     },
                 },
-                "lesson_id": self.id,
+                "lesson_id": self.lesson_id,
                 "position": self.position,
                 "cost": self.cost,
             }
