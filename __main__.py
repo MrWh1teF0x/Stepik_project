@@ -1,27 +1,10 @@
-from Parse_Classes.online_tokens import OnlineStep, OnlineLesson
-
-from Parse_Classes.types_of_step import *
-from src.StepikAPI.stepik_api import StepikAPI, LoggedSession
-import json, requests, yaml
+from src.Parse_Classes.online_tokens import *
+from src.Parse_Classes.types_of_step import *
+from src.StepikAPI.logged_session import *
 
 
 def main():
-    client_id, client_secret = None, None
-
-    try:
-        with open("cred.yaml") as file:
-            s = yaml.load(file, yaml.SafeLoader)
-            client_id = s["client_id"]
-            client_secret = s["client_secret"]
-
-    except FileExistsError:
-        print('File "cred.yaml" does not exist!')
-
-    except KeyError:
-        print('There are no variables "client_id" or "client_secret"!')
-
-    except Exception as e:
-        print(e)
+    init_secret_fields()
 
 
 if __name__ == "__main__":
