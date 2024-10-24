@@ -9,7 +9,6 @@ class TypeStep(ABC):
     cost: int = 0
     lesson_id: int = None
     position: int = None
-    id: int = None
 
     @abstractmethod
     def body(self) -> dict:
