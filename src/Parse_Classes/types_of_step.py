@@ -81,8 +81,15 @@ class StepNumber(TypeStep):
 
 
 @dataclass
+class QuizAnswer:
+    text: str
+    is_correct: bool
+
+
+@dataclass
 class StepQuiz(TypeStep):
-    answers: list[tuple[str, bool]] = field(default_factory=list)
+
+    answers: list[QuizAnswer] = field(default_factory=list)
 
     def body(self) -> dict:
         return {
@@ -92,7 +99,11 @@ class StepQuiz(TypeStep):
                     "text": self.text,
                     "source": {
                         "options": [
-                            {"is_correct": answer[1], "text": answer[0], "feedback": ""}
+                            {
+                                "is_correct": answer.is_correct,
+                                "text": answer.text,
+                                "feedback": "",
+                            }
                             for answer in self.answers
                         ],
                         "is_always_correct": False,
