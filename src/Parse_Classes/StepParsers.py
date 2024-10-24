@@ -8,15 +8,33 @@ class TypeStep:
     text: str = ""
     json_data: dict = field(default_factory=dict)
 
-    def __init__(self):
+    def __init__(self, markdown: list[str] | None = None):
+        if markdown is not None:
+            self.parse(markdown)
+
+    def parse(self, markdown: list[str]):
         pass
 
-    def body(self):
-        pass
+    def build_body(self):
+        self.json_data = {"stepSource": {}}
 
 
 class StepText(TypeStep):
-    def __post_init__(self):
+    def __init__(self, markdown: list[str] | None = None):
+        super().__init__(markdown)
+
+    def parse(self, markdown: list[str]) -> None:
+        if not PPF.check_format(markdown[0], PPF.format_steptext):
+            if not PPF.check_format(markdown[0], PPF.format_step_name[0]):
+                raise SyntaxError(
+                    "Step:Text was set or written incorrectly - Impossible ERROR"
+                )
+
+        self.text = "\n".join(markdown[1:])
+
+        self.build_body()
+
+    def build_body(self):
         self.json_data = {
             "stepSource": {
                 "block": {
@@ -25,12 +43,6 @@ class StepText(TypeStep):
                 }
             }
         }
-
-    def parse(self, markdown: list[str]) -> None:
-        pass
-
-    def body(self):
-        pass
 
 
 class StepString(TypeStep):
@@ -141,19 +153,19 @@ class StepTask(TypeStep):
 
     def __post_init__(self):
         self.json_data = {
-                "stepSource": {
-                    "block": {
-                        "name": "code",
-                        "text": self.text,
-                        "source": {
-                            "code": self.code,
-                            "samples_count": len(self.test_cases),
-                            "test_cases": [self.test_cases],
-                        },
+            "stepSource": {
+                "block": {
+                    "name": "code",
+                    "text": self.text,
+                    "source": {
+                        "code": self.code,
+                        "samples_count": len(self.test_cases),
+                        "test_cases": [self.test_cases],
                     },
-                    "cost": self.cost,
-                }
+                },
+                "cost": self.cost,
             }
+        }
 
     def parse(self, markdown: list[str]) -> None:
         pass

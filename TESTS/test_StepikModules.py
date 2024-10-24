@@ -49,7 +49,7 @@ def test_PyParse_check_format():
     assert a[1][0][1].asList() == ['lesson', '=', '123']
     assert a[1][0][1].asDict() == {'lesson_id': '123'}
     a_1 = format_lesson_name.runTests("  #   123123123", comment=None, printResults=False)
-    assert a[0]
+    assert a_1[0]
 
     b = format_lesson_name.runTests("  #    Lesson 1      ", comment=None, printResults=False)
     assert b[0]
