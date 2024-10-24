@@ -12,8 +12,8 @@ host = "https://stepik.org"
 
 @dataclass
 class OnlineStep:
-    step_data: TypeStep
-    id: None
+    step_data: TypeStep = None
+    id: int = None
     url = f"{host}/api/step-sources"
 
     def __post_init__(self):
@@ -22,9 +22,10 @@ class OnlineStep:
 
         step_info = self.info()["steps"][0]
 
-        self.step_data.lesson_id = step_info["lesson"]
-        self.step_data.position = step_info["position"]
-        self.step_data.text = step_info["block"]["text"]
+        lesson_id = step_info["lesson"]
+        position = step_info["position"]
+        text = step_info["block"]["text"]
+        self.step_data = StepText(text=text, lesson_id=lesson_id, position=position)
 
     def info(self):
         if not self.id:
@@ -74,8 +75,21 @@ class OnlineLesson:
 
     def __post_init__(self):
         if self.id:
-            session = Session()
-            responce = session.request(TypeRequest.GET, url=f"{self.url}/{self.id}")
+            return
+
+        json_data = self.info()["lessons"][0]
+
+        for step_id in json_data["steps"]:
+            print(step_id)
+            self.add_step(OnlineStep(id=step_id))
+
+    def info(self):
+        if not self.id:
+            raise AttributeError("This lesson has no id!")
+
+        session = Session()
+        responce = session.request(method=TypeRequest.GET, url=f"{self.url}/{self.id}")
+        return json.loads(responce.text)
 
     def add_step(self, step: OnlineStep, position: int = 0):
         if not (0 <= position <= len(self.steps) - 1 or position == 0):
