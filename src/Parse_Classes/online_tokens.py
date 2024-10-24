@@ -21,11 +21,24 @@ class OnlineStep:
             return
 
         step_info = self.info()["steps"][0]
+        self.__init_step_data(step_info)
 
+    def __init_step_data(self, step_info: dict):
         lesson_id = step_info["lesson"]
         position = step_info["position"]
         text = step_info["block"]["text"]
-        self.step_data = StepText(text=text, lesson_id=lesson_id, position=position)
+
+        cost = 0
+        if "cost" in step_info:
+            cost = step_info["cost"]
+
+        if step_info["block"]["name"] == "text":
+            self.step_data = StepText(
+                text=text, lesson_id=lesson_id, cost=cost, position=position
+            )
+
+        elif step_info["block"]["name"] == "choice":
+            pass
 
     def info(self):
         if not self.id:
@@ -74,13 +87,12 @@ class OnlineLesson:
     url = f"{host}/api/lessons"
 
     def __post_init__(self):
-        if self.id:
+        if not self.id:
             return
 
         json_data = self.info()["lessons"][0]
 
         for step_id in json_data["steps"]:
-            print(step_id)
             self.add_step(OnlineStep(id=step_id))
 
     def info(self):
