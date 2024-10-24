@@ -120,7 +120,7 @@ class LoggedSession:
     def request(
         self,
         method: TypeRequest,
-        url,
+        url: str,
         stacklevel: int = 3,
         log_response_data: bool = True,
         json_data: dict = None,
@@ -145,7 +145,9 @@ class LoggedSession:
             url=url,
             verify=not self.ignore_ssl_certificate_errors,
             json=json_data,
+            headers=self.headers(),
         )
+
         if self.log_http_code:
             logger.info(f"Status Code: {res.status_code}", stacklevel=stacklevel)
 
