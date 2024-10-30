@@ -74,27 +74,6 @@ class StepQuiz(TypeStep):
 
 
 @dataclass
-class StepString(TypeStep):
-    code: str = ""
-
-    def body(self) -> dict:
-        return {
-            "stepSource": {
-                "block": {
-                    "name": "string",
-                    "text": self.text,
-                    "source": {
-                        "code": self.code,
-                    },
-                },
-                "lesson": self.lesson_id,
-                "position": self.position,
-                "cost": self.cost,
-            }
-        }
-
-
-@dataclass
 class StepNumber(TypeStep):
     answer: float = None
     max_error: float = 0
@@ -112,6 +91,34 @@ class StepNumber(TypeStep):
                                 "max_error": str(self.max_error),
                             }
                         ]
+                    },
+                },
+                "lesson": self.lesson_id,
+                "position": self.position,
+                "cost": self.cost,
+            }
+        }
+
+
+@dataclass
+class StepString(TypeStep):
+    answer: str = None
+    match_substring: bool = False
+    case_sensitive: bool = False
+
+    def body(self) -> dict:
+        return {
+            "stepSource": {
+                "block": {
+                    "name": "string",
+                    "text": self.text,
+                    "source": {
+                        "pattern": self.answer,
+                        "use_re": False,
+                        "match_substring": self.match_substring,
+                        "case_sensitive": self.case_sensitive,
+                        "code": "",
+                        "is_file_disabled": True,
                     },
                 },
                 "lesson": self.lesson_id,
