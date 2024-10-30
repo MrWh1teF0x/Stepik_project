@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 
 from src.Parse_Classes.types_of_step import *
 from src.StepikAPI.logged_session import LoggedSession as Session
-from src.StepikAPI.logged_session import TypeRequest
 
 
 host = "https://stepik.org"
@@ -45,9 +44,7 @@ class OnlineStep:
             raise AttributeError("This step has no id!")
 
         session = Session()
-        responce = session.request(
-            method=TypeRequest.GET, url=f"{host}/api/steps/{self.id}"
-        )
+        responce = session.request(method="get", url=f"{host}/api/steps/{self.id}")
         return json.loads(responce.text)
 
     def create(self, step_data: TypeStep = None):
@@ -56,7 +53,7 @@ class OnlineStep:
 
         session = Session()
         responce = session.request(
-            method=TypeRequest.POST, url=self.url, json_data=self.step_data.body()
+            method="post", url=self.url, json_data=self.step_data.body()
         )
 
         json_data = json.loads(responce.text)
@@ -68,14 +65,14 @@ class OnlineStep:
 
         session = Session()
         session.request(
-            TypeRequest.PUT,
+            "put",
             f"{self.url}/{self.id}",
             json_data=self.step_data.body(),
         )
 
     def delete(self):
         session = Session()
-        session.request(TypeRequest.DELETE, url=self.url)
+        session.request("delete", url=self.url)
         self.step_data = None
 
 
@@ -93,18 +90,18 @@ class OnlineLesson:
         json_data = self.info()["lessons"][0]
 
         for step_id in json_data["steps"]:
-            self.add_step(OnlineStep(id=step_id))
+            self.steps.append(OnlineStep(id=step_id))
 
     def info(self):
         if not self.id:
             raise AttributeError("This lesson has no id!")
 
         session = Session()
-        responce = session.request(method=TypeRequest.GET, url=f"{self.url}/{self.id}")
+        responce = session.request(method="get", url=f"{self.url}/{self.id}")
         return json.loads(responce.text)
 
     def add_step(self, step: OnlineStep, position: int = 0):
-        if not (0 <= position <= len(self.steps) - 1 or position == 0):
+        if not (0 <= abs(position) <= len(self.steps) + 1):
             raise IndexError("Wrong position of the step!")
 
         if position == 0 or position == -1:
@@ -134,7 +131,7 @@ class OnlineLesson:
 
     def get_steps_ids(self):
         session = Session()
-        responce = session.request(TypeRequest.GET, url=f"{self.url}/{self.id}")
+        responce = session.request("get", url=f"{self.url}/{self.id}")
         return json.loads(responce.text)["lessons"][0]["steps"]
 
 

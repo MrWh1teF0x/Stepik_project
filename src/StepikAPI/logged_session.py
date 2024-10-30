@@ -7,13 +7,6 @@ import yaml
 from enum import Enum
 
 
-class TypeRequest(Enum):
-    POST = "post"
-    GET = "get"
-    PUT = "put"
-    DELETE = "delete"
-
-
 path = pathlib.Path(__file__).parent.parent.parent / "cred.yaml"
 client_id, client_secret = None, None
 
@@ -119,14 +112,14 @@ class LoggedSession:
 
     def request(
         self,
-        method: TypeRequest,
+        method: str,
         url: str,
         stacklevel: int = 3,
         log_response_data: bool = True,
         json_data: dict = None,
     ) -> requests.Response:
         if self.log_url:
-            logger.info(f"{method.value} {url}", stacklevel=stacklevel)
+            logger.info(f"{method} {url}", stacklevel=stacklevel)
         if self.log_header:
             logger.info(
                 f"Request Headers: {json.dumps(self.headers())}",
@@ -141,7 +134,7 @@ class LoggedSession:
             logger.info(f"json = {json.dumps(json_data)}", stacklevel=stacklevel)
 
         res = self.__session.request(
-            method=method.value,
+            method=method,
             url=url,
             verify=not self.ignore_ssl_certificate_errors,
             json=json_data,
