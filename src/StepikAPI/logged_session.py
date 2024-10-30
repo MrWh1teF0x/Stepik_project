@@ -7,7 +7,7 @@ import yaml
 from enum import Enum
 
 
-path = pathlib.Path(__file__).parent.parent.parent / "cred.yaml"
+path = pathlib.Path(__file__).parent / "../../cred.yaml"
 client_id, client_secret = None, None
 
 
