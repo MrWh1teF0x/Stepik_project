@@ -47,8 +47,11 @@ class OnlineStep:
         )
 
     def delete(self):
+        if not self.id:
+            raise AttributeError("This step has no id!")
+
         session = Session()
-        session.request("delete", url=self.url)
+        session.request("delete", url=f"{self.url}/{self.id}")
         self.step_data = None
 
 
@@ -76,34 +79,29 @@ class OnlineLesson:
         responce = session.request(method="get", url=f"{self.url}/{self.id}")
         return json.loads(responce.text)
 
-    def add_step(self, step: OnlineStep, position: int = 0):
-        if not (0 <= abs(position) <= len(self.steps) + 1):
-            raise IndexError("Wrong position of the step!")
+    def add_step(self, step: OnlineStep):
+        position = step.step_data.position
+        self.steps.insert(position, step)
 
-        if position == 0 or position == -1:
-            self.steps.append(step)
-        else:
-            if position > 0:
-                self.steps.insert(position - 1, step)
-            else:
-                self.steps.insert(position + 1, step)
+        step.create()
 
     def update(self, steps: list[OnlineStep]):
-        new_step_ids = [step.id for step in steps]
-        old_step_ids = []
+        if not self.id:
+            raise AttributeError("This lesson has no id!")
 
-        for old_step in self.steps:
-            if old_step.id not in new_step_ids:
-                old_step.delete()
-            else:
-                old_step_ids.append(old_step.id)
+        if len(self.steps) > len(steps):
+            while len(self.steps) != len(steps):
+                index = len(self.steps) - 1
+                self.steps[index].delete()
+                del self.steps[index]
 
-        for step in steps:
-            if step.id not in old_step_ids:
-                step.step_data.lesson_id = self.id
-                step.create()
+        for i, new_step in enumerate(steps):
+            if len(self.steps) > i:
+                new_step.id = self.steps[i].id
+                self.steps[i] = new_step
+                new_step.update()
             else:
-                step.update()
+                self.add_step(new_step)
 
     def get_steps_ids(self):
         session = Session()
