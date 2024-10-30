@@ -33,6 +33,47 @@ class StepText(TypeStep):
 
 
 @dataclass
+class QuizAnswer:
+    text: str
+    is_correct: bool
+
+
+@dataclass
+class StepQuiz(TypeStep):
+    answers: list[QuizAnswer] = field(default_factory=list)
+    is_multiple_choice: bool = False
+
+    def body(self) -> dict:
+        return {
+            "stepSource": {
+                "block": {
+                    "name": "choice",
+                    "text": self.text,
+                    "source": {
+                        "options": [
+                            {
+                                "is_correct": answer.is_correct,
+                                "text": answer.text,
+                                "feedback": "",
+                            }
+                            for answer in self.answers
+                        ],
+                        "is_always_correct": False,
+                        "is_html_enabled": True,
+                        "sample_size": len(self.answers),
+                        "is_multiple_choice": self.is_multiple_choice,
+                        "preserve_order": False,
+                        "is_options_feedback": False,
+                    },
+                },
+                "lesson": self.lesson_id,
+                "position": self.position,
+                "cost": self.cost,
+            }
+        }
+
+
+@dataclass
 class StepString(TypeStep):
     code: str = ""
 
@@ -71,47 +112,6 @@ class StepNumber(TypeStep):
                                 "max_error": str(self.max_error),
                             }
                         ]
-                    },
-                },
-                "lesson": self.lesson_id,
-                "position": self.position,
-                "cost": self.cost,
-            }
-        }
-
-
-@dataclass
-class QuizAnswer:
-    text: str
-    is_correct: bool
-
-
-@dataclass
-class StepQuiz(TypeStep):
-
-    answers: list[QuizAnswer] = field(default_factory=list)
-
-    def body(self) -> dict:
-        return {
-            "stepSource": {
-                "block": {
-                    "name": "choice",
-                    "text": self.text,
-                    "source": {
-                        "options": [
-                            {
-                                "is_correct": answer.is_correct,
-                                "text": answer.text,
-                                "feedback": "",
-                            }
-                            for answer in self.answers
-                        ],
-                        "is_always_correct": False,
-                        "is_html_enabled": True,
-                        "sample_size": len(self.answers),
-                        "is_multiple_choice": False,
-                        "preserve_order": False,
-                        "is_options_feedback": False,
                     },
                 },
                 "lesson": self.lesson_id,
