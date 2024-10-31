@@ -1,6 +1,6 @@
-from src.Parse_Classes.online_tokens import *
-from src.Parse_Classes.types_of_step import *
-from src.StepikAPI.logged_session import *
+from src.stepik_api.online_tokens import *
+from src.stepik_api.types_of_step import *
+from src.stepik_api.logged_session import *
 
 
 def main():

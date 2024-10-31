@@ -1,4 +1,4 @@
-from Parse_Classes.online_tokens import OnlineLesson
+from stepik_api.online_tokens import OnlineLesson
 from src.PyParseFormats import *
 import pytest
 

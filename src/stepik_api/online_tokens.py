@@ -2,8 +2,8 @@ import requests
 import json
 from dataclasses import dataclass, field
 
-from src.Parse_Classes.types_of_step import *
-from src.StepikAPI.logged_session import LoggedSession as Session
+from src.stepik_api.types_of_step import *
+from src.stepik_api.logged_session import LoggedSession as Session
 
 
 host = "https://stepik.org"
