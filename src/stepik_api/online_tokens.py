@@ -105,27 +105,3 @@ class OnlineLesson:
 
     def get_steps_ids(self):
         return [step.id for step in self.steps]
-
-
-@dataclass
-class OnlineUnit:
-    section_id: int
-    lesson_id: int
-    id: int = None
-    url = f"{host}/api/units"
-
-
-@dataclass
-class OnlineSection:
-    course_id: int
-    id: int = None
-    position: int = None
-    units: list[OnlineUnit] = field(default_factory=list)
-    url = f"{host}/api/sections"
-
-
-@dataclass
-class OnlineCourse:
-    id: int
-    sections: list[OnlineSection] = field(default_factory=list)
-    url = f"{host}/api/courses"
