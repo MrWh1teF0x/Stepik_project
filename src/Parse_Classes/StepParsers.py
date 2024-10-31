@@ -1,27 +1,28 @@
 from dataclasses import field, dataclass
 import src.PyParseFormats as PPF
+from abc import ABC, abstractmethod
 import warnings
 
 
-class TypeStep:
-    title: str = ""
-    text: str = ""
+class TypeStep(ABC):
     json_data: dict = field(default_factory=dict)
 
     def __init__(self, markdown: list[str] | None = None):
         if markdown is not None:
             self.parse(markdown)
 
+    @abstractmethod
     def parse(self, markdown: list[str]):
         pass
 
+    @abstractmethod
     def build_body(self):
-        self.json_data = {"stepSource": {}}
+        self.json_data = {"block": {}}
 
 
 class StepText(TypeStep):
-    def __init__(self, markdown: list[str] | None = None):
-        super().__init__(markdown)
+    text: str = ""
+    json_data: dict = field(default_factory=dict)
 
     def parse(self, markdown: list[str]) -> None:
         if not PPF.check_format(markdown[0], PPF.format_steptext):
@@ -30,17 +31,15 @@ class StepText(TypeStep):
                     "Step:Text was set or written incorrectly - Impossible ERROR"
                 )
 
-        self.text = "\n".join(markdown[1:])
+        self.text = "\n".join(markdown)
 
         self.build_body()
 
-    def build_body(self):
+    def build_body(self) -> None:
         self.json_data = {
-            "stepSource": {
-                "block": {
-                    "name": "text",
-                    "text": self.text,
-                }
+            "block": {
+                "name": "text",
+                "text": self.text,
             }
         }
 
