@@ -25,8 +25,8 @@ class StepText(TypeStep):
     json_data: dict = field(default_factory=dict)
 
     def parse(self, markdown: list[str]) -> None:
-        if not PPF.check_format(markdown[0], PPF.format_steptext):
-            if not PPF.check_format(markdown[0], PPF.format_step_name[0]):
+        if not PPF.check_format(markdown[0], PPF.format_step_text_name):
+            if not PPF.check_format(markdown[0], PPF.format_step_name):
                 raise SyntaxError(
                     "Step:Text was set or written incorrectly - Impossible ERROR"
                 )

@@ -1,31 +1,42 @@
 import pyparsing as pp
 
-# WARNING: pyparsing can cause errors with language coding (unicode) ----------------------------------------------- !!!
+# WARNING: pyparsing can cause errors with encodings (unicode) ----------------------------------------------------- !!!
 import re
 
 
 class HiddenFormats:
     _unexpected = pp.SkipTo(pp.LineEnd(), include=True)("Unexpected_string")
-    _hash_symb = pp.Literal("#")
+    _del_spaces = pp.Suppress(pp.White())
+    _h1 = pp.Keyword("#")
+    _h2 = pp.Keyword("##")
     # ------------------------------------------------------------------------------------------------------------------
-    # format_lesson_id      -> [("lesson", "=", *number*) {'lesson': *number*}]
+    # format_answer            -> [("ANSWER:", *line_of_text*), {'answer': *line_of_text*}]
+    f_ans = pp.Literal("ANSWER:") + _del_spaces + (pp.restOfLine())("answer")
+
+    # format_lesson_id         -> [("lesson", "=", *number*) {'lesson': *number*}]
     f_les_id = pp.Literal("lesson") + "=" + pp.Word(pp.nums)("lesson_id")
-    # format_lesson_name    -> [("#", *line_of_text*), {lesson_name: *line_of_text*}]
-    f_les_name = (
-        pp.Keyword("#") + pp.Suppress(pp.White()) + (pp.restOfLine())("lesson_name")
-    )
-    # format_step_name      -> [("##", *line_of_text*), {step_name: *line_of_text*}]
-    f_st_name = (
-        pp.Keyword("##") + pp.Suppress(pp.White()) + (pp.restOfLine())("step_name")
-    )
-    # format_steptext_name  -> [("##", "TEXT", *line_of_text*), {step_name: *line_of_text*}]
-    f_st_t_name = pp.Keyword("##") + pp.Keyword("TEXT") + (pp.restOfLine())("step_name")
+    # ------------------------------------------------------------------------------------------------------------------
+    # format_lesson_name       -> [("#", *line_of_text*), {'lesson_name': *line_of_text*}]
+    f_les_name = _h1 + _del_spaces + (pp.restOfLine())("lesson_name")
+
+    # format_step_name         -> [("##", *line_of_text*), {'step_name': *line_of_text*}]
+    f_st_name = _h2 + _del_spaces + (pp.restOfLine())("step_name")
+
+    # format_step_text_name    -> [("##", "TEXT", *line_of_text*), {'step_name': *line_of_text*}]
+    f_st_t_name = _h2 + pp.Keyword("TEXT") + _del_spaces + (pp.restOfLine())("step_name")
+
+    # format_step_string_name  -> [("##", "STRING", *line_of_text*), {step_name: *line_of_text*}]
+    f_st_str_name = _h2 + pp.Keyword("STRING") + _del_spaces + (pp.restOfLine())("step_name")
 
 
+format_answer = HiddenFormats.f_ans
 format_lesson_id = HiddenFormats.f_les_id
+
 format_lesson_name = HiddenFormats.f_les_name
 format_step_name = HiddenFormats.f_st_name
-format_steptext = HiddenFormats.f_st_t_name
+format_step_text_name = HiddenFormats.f_st_t_name
+format_step_string_name = HiddenFormats.f_st_str_name
+
 
 
 def search_format_in_text(

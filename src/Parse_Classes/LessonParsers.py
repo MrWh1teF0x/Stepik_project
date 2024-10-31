@@ -2,7 +2,7 @@ from src.Parse_Classes.StepParsers import *
 import src.PyParseFormats as PPF
 
 
-STEP_MAP = {PPF.format_steptext: StepText}
+STEP_MAP = {PPF.format_step_text_name: StepText}
 default_step_format = StepText
 
 
