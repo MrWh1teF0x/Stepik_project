@@ -104,9 +104,7 @@ class OnlineLesson:
                 self.add_step(new_step)
 
     def get_steps_ids(self):
-        session = Session()
-        responce = session.request("get", url=f"{self.url}/{self.id}")
-        return json.loads(responce.text)["lessons"][0]["steps"]
+        return [step.id for step in self.steps]
 
 
 @dataclass
