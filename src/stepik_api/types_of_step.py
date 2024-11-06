@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
+from typing import Dict, List
 
 
 @dataclass
@@ -292,6 +293,56 @@ class StepFill(StepType):
                         "is_partially_correct": self.is_partially_correct,
                     },
                 },
-                "cost": 1,
+                "cost": self.cost,
+            }
+        }
+
+
+@dataclass
+class Table:
+    is_checkbox: bool = False
+    rows: Dict[str, List[bool]] = field(default_factory=dict)
+    columns: list[str] = field(default_factory=list)
+
+    def rows_body(self):
+        return [
+            {"name": key, "columns": [{"choice": choice} for choice in self.rows[key]]}
+            for key in self.rows.keys()
+        ]
+
+    def columns_body(self):
+        return [{"name": self.columns[i]} for i in range(len(self.columns))]
+
+
+@dataclass
+class StepTable(StepType):
+    table: Table = None
+    is_randomize_rows: bool = False
+    is_randomize_columns: bool = False
+    is_always_correct: bool = False
+    description: str = ""
+
+    def body(self) -> dict:
+        return {
+            "stepSource": {
+                "lesson": self.lesson_id,
+                "position": self.position,
+                "block": {
+                    "name": "table",
+                    "text": self.text,
+                    "source": {
+                        "columns": self.table.columns_body(),
+                        "rows": self.table.rows_body(),
+                        "options": {
+                            "is_checkbox": self.table.is_checkbox,
+                            "is_randomize_rows": self.is_randomize_rows,
+                            "is_randomize_columns": self.is_randomize_columns,
+                            "sample_size": -1,
+                        },
+                        "description": self.description,
+                        "is_always_correct": self.is_always_correct,
+                    },
+                },
+                "cost": self.cost,
             }
         }
