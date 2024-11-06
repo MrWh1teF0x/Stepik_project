@@ -184,10 +184,41 @@ class StepSorting(TypeStep):
                     "name": "sorting",
                     "text": self.text,
                     "source": {
-                        "options": [ {"text": answer} for answer in self.sorted_answers
-                        ]
-                    }
+                        "options": [{"text": answer} for answer in self.sorted_answers]
+                    },
                 },
-                "cost": self.cost
+                "cost": self.cost,
+            }
+        }
+
+
+@dataclass
+class MatchingPair:
+    first: str
+    second: str
+
+
+@dataclass
+class StepMatching(TypeStep):
+    preserve_firsts_order: bool = True
+    pairs: list[MatchingPair] = field(default_factory=list)
+
+    def body(self) -> dict:
+        return {
+            "stepSource": {
+                "lesson": self.lesson_id,
+                "position": self.position,
+                "block": {
+                    "name": "matching",
+                    "text": self.text,
+                    "source": {
+                        "preserve_firsts_order": self.preserve_firsts_order,
+                        "pairs": [
+                            {"first": pair.first, "second": pair.second}
+                            for pair in self.pairs
+                        ],
+                    },
+                },
+                "cost": self.cost,
             }
         }
