@@ -169,3 +169,25 @@ class StepTask(TypeStep):
                 "cost": self.cost,
             }
         }
+
+
+@dataclass
+class StepSorting(TypeStep):
+    sorted_answers: list[str] = field(default_factory=list)
+
+    def body(self) -> dict:
+        return {
+            "stepSource": {
+                "lesson": self.lesson_id,
+                "position": self.position,
+                "block": {
+                    "name": "sorting",
+                    "text": self.text,
+                    "source": {
+                        "options": [ {"text": answer} for answer in self.sorted_answers
+                        ]
+                    }
+                },
+                "cost": self.cost
+            }
+        }
