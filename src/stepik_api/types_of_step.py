@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 
 @dataclass
-class TypeStep(ABC):
+class StepType(ABC):
     title: str = ""
     text: str = ""
     cost: int = 0
@@ -16,8 +16,7 @@ class TypeStep(ABC):
 
 
 @dataclass
-class StepText(TypeStep):
-
+class StepText(StepType):
     def body(self) -> dict:
         return {
             "stepSource": {
@@ -33,14 +32,14 @@ class StepText(TypeStep):
 
 
 @dataclass
-class QuizAnswer:
+class Answer:
     text: str
     is_correct: bool
 
 
 @dataclass
-class StepQuiz(TypeStep):
-    answers: list[QuizAnswer] = field(default_factory=list)
+class StepQuiz(StepType):
+    answers: list[Answer] = field(default_factory=list)
     is_multiple_choice: bool = False
 
     def body(self) -> dict:
@@ -74,7 +73,7 @@ class StepQuiz(TypeStep):
 
 
 @dataclass
-class StepNumber(TypeStep):
+class StepNumber(StepType):
     answer: float = None
     max_error: float = 0
 
@@ -101,7 +100,7 @@ class StepNumber(TypeStep):
 
 
 @dataclass
-class StepString(TypeStep):
+class StepString(StepType):
     answer: str = None
     match_substring: bool = False
     case_sensitive: bool = False
@@ -135,7 +134,7 @@ class TaskTest:
 
 
 @dataclass
-class StepTask(TypeStep):
+class StepTask(StepType):
     samples_count: int = 1
     execution_time_limit: int = 5
     execution_memory_limit: int = 256
@@ -172,7 +171,7 @@ class StepTask(TypeStep):
 
 
 @dataclass
-class StepSorting(TypeStep):
+class StepSort(StepType):
     sorted_answers: list[str] = field(default_factory=list)
 
     def body(self) -> dict:
@@ -193,15 +192,15 @@ class StepSorting(TypeStep):
 
 
 @dataclass
-class MatchingPair:
+class MatchPair:
     first: str
     second: str
 
 
 @dataclass
-class StepMatching(TypeStep):
+class StepMatch(StepType):
     preserve_firsts_order: bool = True
-    pairs: list[MatchingPair] = field(default_factory=list)
+    pairs: list[MatchPair] = field(default_factory=list)
 
     def body(self) -> dict:
         return {
@@ -220,5 +219,79 @@ class StepMatching(TypeStep):
                     },
                 },
                 "cost": self.cost,
+            }
+        }
+
+
+@dataclass
+class BlankType(ABC):
+    @abstractmethod
+    def body(self) -> dict:
+        pass
+
+
+@dataclass
+class BlankText(BlankType):
+    text: str
+
+    def body(self) -> dict:
+        return {"type": "text", "text": self.text, "options": []}
+
+
+@dataclass
+class BlankInput(BlankType):
+    answers: list[Answer] = field(default_factory=list)
+
+    def body(self) -> dict:
+        return {
+            "type": "input",
+            "text": "",
+            "options": [
+                {"text": answer.text, "is_correct": answer.is_correct}
+                for answer in self.answers
+            ],
+        }
+
+
+@dataclass
+class BlankSelect(BlankType):
+    answers: list[Answer] = field(default_factory=list)
+
+    def body(self) -> dict:
+        return {
+            "type": "select",
+            "text": "",
+            "options": [
+                {"text": answer.text, "is_correct": answer.is_correct}
+                for answer in self.answers
+            ],
+        }
+
+
+@dataclass
+class StepFill(StepType):
+    is_case_sensitive: bool = False
+    is_detailed_feedback: bool = False
+    is_partially_correct: bool = False
+    components: list[BlankType] = field(default_factory=list)
+
+    def body(self) -> dict:
+        return {
+            "stepSource": {
+                "lesson": self.lesson_id,
+                "position": self.position,
+                "block": {
+                    "name": "fill-blanks",
+                    "text": self.text,
+                    "source": {
+                        "components": [
+                            component.body() for component in self.components
+                        ],
+                        "is_case_sensitive": self.is_case_sensitive,
+                        "is_detailed_feedback": self.is_detailed_feedback,
+                        "is_partially_correct": self.is_partially_correct,
+                    },
+                },
+                "cost": 1,
             }
         }

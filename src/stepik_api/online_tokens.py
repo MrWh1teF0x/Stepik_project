@@ -11,7 +11,7 @@ host = "https://stepik.org"
 
 @dataclass
 class OnlineStep:
-    step_data: TypeStep = None
+    step_data: StepType = None
     id: int = None
     url = f"{host}/api/step-sources"
 
@@ -23,7 +23,7 @@ class OnlineStep:
         responce = session.request(method="get", url=f"{host}/api/steps/{self.id}")
         return json.loads(responce.text)
 
-    def create(self, step_data: TypeStep = None):
+    def create(self, step_data: StepType = None):
         if step_data:
             self.step_data = step_data
 
@@ -35,7 +35,7 @@ class OnlineStep:
         json_data = json.loads(responce.text)
         self.id = json_data["step-sources"][0]["id"]
 
-    def update(self, step_data: TypeStep = None):
+    def update(self, step_data: StepType = None):
         if step_data:
             self.step_data = step_data
 
