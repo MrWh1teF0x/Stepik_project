@@ -99,3 +99,28 @@ def test_StepNumber():
     lesson.delete_step(-1)
 
     assert lesson.get_steps_ids() == STEP_IDS
+
+
+def test_StepString():
+    lesson = OnlineLesson(id=LESSON_ID)
+
+    step_string = OnlineStep(
+        StepString(
+            text="Как называется эта платформа?",
+            cost=1,
+            lesson_id=LESSON_ID,
+            position=10,
+            answer="Stepik",
+            case_sensitive=False,
+        )
+    )
+    lesson.add_step(step_string)
+
+    step_string_2 = OnlineStep(id=lesson.get_steps_ids()[-1])
+    step_string_3 = OnlineStep(id=step_string.id)
+
+    assert step_string.info() == step_string_2.info() == step_string_3.info()
+
+    lesson.delete_step(-1)
+
+    assert lesson.get_steps_ids() == STEP_IDS
