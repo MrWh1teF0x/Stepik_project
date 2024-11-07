@@ -101,7 +101,7 @@ def test_PyParse_check_format():
 def test_Lesson_parse_id_and_name():
     a1 = Lesson(r"..\files\test.md")
     a2 = Lesson()
-    a3 = Lesson(r"..\files\sample_2.md")
+    a3 = Lesson(r"..\files\sample_1.md")
     a4 = Lesson()
 
     with pytest.warns(UserWarning):
@@ -121,3 +121,13 @@ def test_Lesson_parse_id_and_name():
         a4.parse()
     assert a4.name == ""
     assert a4.id == -1
+
+
+def test_Steps():
+    lesson = Lesson(r"..\files\debug.md")
+    lesson.parse()
+
+    steps = lesson.steps
+    print()
+    for s in steps:
+        print(s.json_data)
