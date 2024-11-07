@@ -43,3 +43,31 @@ def test_StepText():
     lesson.delete_step(-1)
 
     assert lesson.get_steps_ids() == STEP_IDS
+
+
+def test_StepQuiz():
+    lesson = OnlineLesson(id=LESSON_ID)
+
+    step_quiz = OnlineStep(
+        StepQuiz(
+            text="Сколько будет 5+3?",
+            lesson_id=LESSON_ID,
+            position=10,
+            cost=5,
+            answers=[
+                Answer(text="3", is_correct=False),
+                Answer(text="8", is_correct=True),
+                Answer(text="1", is_correct=False),
+                Answer(text="7", is_correct=False),
+            ],
+            is_multiple_choice=False,
+        )
+    )
+    lesson.add_step(step_quiz)
+    step_quiz_2 = OnlineStep(id=lesson.get_steps_ids()[-1])
+
+    assert step_quiz_2.info() == step_quiz.info()
+
+    lesson.delete_step(-1)
+
+    assert lesson.get_steps_ids() == STEP_IDS
