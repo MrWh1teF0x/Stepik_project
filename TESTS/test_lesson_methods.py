@@ -7,7 +7,17 @@ setup_logger(1, 1)
 init_secret_fields()
 
 LESSON_ID = 1432805
-STEP_IDS = [6166762, 6165951, 6166824, 6170935, 6170948]
+STEP_IDS = [
+    6166762,
+    6165951,
+    6166824,
+    6170935,
+    6205521,
+    6203087,
+    6203240,
+    6203784,
+    6204084,
+]
 
 
 def test_get_steps_ids():
@@ -15,15 +25,21 @@ def test_get_steps_ids():
     assert lesson.get_steps_ids() == STEP_IDS
 
 
-def test_add_StepText():
+def test_StepText():
     lesson = OnlineLesson(id=LESSON_ID)
 
     step_text = OnlineStep(
         StepText(
-            text="Этот шаг был создан с помощью теста!", lesson_id=LESSON_ID, position=6
+            text="Этот шаг был создан с помощью теста!",
+            lesson_id=LESSON_ID,
+            position=10,
         )
     )
     lesson.add_step(step_text)
-
     step_text_2 = OnlineStep(id=lesson.get_steps_ids()[-1])
+
     assert step_text_2.info() == step_text.info()
+
+    lesson.delete_step(-1)
+
+    assert lesson.get_steps_ids() == STEP_IDS
