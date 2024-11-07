@@ -85,6 +85,15 @@ class OnlineLesson:
 
         step.create()
 
+    def delete_step(self, position: int):
+        if not (1 <= abs(position) <= len(self.steps)):
+            raise IndexError("Incorrect position!")
+
+        index = position - 1 if position > 0 else position
+
+        self.steps[index].delete()
+        del self.steps[index]
+
     def update(self, steps: list[OnlineStep]):
         if not self.id:
             raise AttributeError("This lesson has no id!")
