@@ -11,6 +11,9 @@ class TypeStep(ABC):
         if markdown is not None:
             self.parse(markdown)
 
+    def __repr__(self):
+        return f"TypeStep()"
+
     @abstractmethod
     def parse(self, markdown: list[str]):
         pass
@@ -23,6 +26,9 @@ class TypeStep(ABC):
 class StepText(TypeStep):
     text: str = ""
     json_data: dict = field(default_factory=dict)
+
+    def __repr__(self):
+        return f"StepText()"
 
     def parse(self, markdown: list[str]) -> None:
         if not PPF.check_format(markdown[0], PPF.format_step_text_name):

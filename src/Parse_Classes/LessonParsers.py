@@ -15,6 +15,9 @@ class Lesson:
     def __init__(self, file_path: str = ""):
         self.set_path(file_path)
 
+    def __repr__(self):
+        return f"Lesson('{self.name}', {self.id})"
+
     def set_path(self, file_path: str):
         self.f_path = file_path
 
