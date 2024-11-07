@@ -36,9 +36,11 @@ def test_StepText():
         )
     )
     lesson.add_step(step_text)
-    step_text_2 = OnlineStep(id=lesson.get_steps_ids()[-1])
 
-    assert step_text_2.info() == step_text.info()
+    step_text_2 = OnlineStep(id=lesson.get_steps_ids()[-1])
+    step_text_3 = OnlineStep(id=step_text.id)
+
+    assert step_text.info() == step_text_2.info() == step_text_3.info()
 
     lesson.delete_step(-1)
 
@@ -64,9 +66,35 @@ def test_StepQuiz():
         )
     )
     lesson.add_step(step_quiz)
-    step_quiz_2 = OnlineStep(id=lesson.get_steps_ids()[-1])
 
-    assert step_quiz_2.info() == step_quiz.info()
+    step_quiz_2 = OnlineStep(id=lesson.get_steps_ids()[-1])
+    step_quiz_3 = OnlineStep(id=step_quiz.id)
+
+    assert step_quiz.info() == step_quiz_2.info() == step_quiz_3.info()
+
+    lesson.delete_step(-1)
+
+    assert lesson.get_steps_ids() == STEP_IDS
+
+
+def test_StepNumber():
+    lesson = OnlineLesson(id=LESSON_ID)
+
+    step_number = OnlineStep(
+        StepNumber(
+            text="Сколько будет 3*4?",
+            lesson_id=LESSON_ID,
+            cost=2,
+            position=10,
+            answer=12,
+        )
+    )
+    lesson.add_step(step_number)
+
+    step_number_2 = OnlineStep(id=lesson.get_steps_ids()[-1])
+    step_number_3 = OnlineStep(id=step_number.id)
+
+    assert step_number.info() == step_number_2.info() == step_number_3.info()
 
     lesson.delete_step(-1)
 
