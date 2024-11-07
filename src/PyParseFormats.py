@@ -13,6 +13,9 @@ class HiddenFormats:
     # format_answer            -> [("ANSWER:", *line_of_text*), {'answer': *line_of_text*}]
     f_ans = pp.Literal("ANSWER:") + _del_spaces + (pp.restOfLine())("answer")
 
+    # format_reg_exp           -> [("ANSWER:", *line_of_text*), {'answer': *line_of_text*}]
+    f_regexp = pp.Literal("REGEXP:") + _del_spaces + (pp.restOfLine())("answer")
+
     # format_lesson_id         -> [("lesson", "=", *number*) {'lesson': *number*}]
     f_les_id = pp.Literal("lesson") + "=" + pp.Word(pp.nums)("lesson_id")
     # ------------------------------------------------------------------------------------------------------------------
@@ -30,6 +33,7 @@ class HiddenFormats:
 
 
 format_answer = HiddenFormats.f_ans
+format_reg_exp = 0
 format_lesson_id = HiddenFormats.f_les_id
 
 format_lesson_name = HiddenFormats.f_les_name
@@ -40,7 +44,10 @@ format_step_string_name = HiddenFormats.f_st_str_name
 
 
 def search_format_in_text(
-    text: list[str], parse_exp: pp.ParserElement, max_amount: int = -1
+        text: list[str],
+        parse_exp: pp.ParserElement,
+        max_amount: int = -1,
+        from_start: bool = False
 ):
     """returns tuple(ParseResults, line_index, start_index_in_line, end_index_in_line).
     if max_amount < 0, that means we search all inclusions of format"""
@@ -50,7 +57,15 @@ def search_format_in_text(
     ans = []
     for line_i in range(len(text)):
 
-        res = tuple(parse_exp.scanString(text[line_i]))
+        if from_start:
+            try:
+                res = ((parse_exp.parseString(text[line_i]), 0, len(text[line_i])),)
+                # TODO: add a way to find end of token in line
+            except Exception:
+                res = ()
+        else:
+            res = tuple(parse_exp.scan_string(text[line_i]))
+
         if res != ():
             for l_res in res:
                 ans.append(
@@ -63,17 +78,27 @@ def search_format_in_text(
     return ans
 
 
-def check_format(
-    text: str, parse_exp: pp.ParserElement, from_start: bool = False
-) -> bool:
-    result = parse_exp.runTests(text, comment=None, printResults=False)
-    return result[0]
+def check_format(text: str, parse_exp: pp.ParserElement, from_start: bool = False) -> bool:
+    if from_start:
+        try:
+            _ = parse_exp.parseString(text)
+            result = True
+        except Exception:
+            result = False
+    else:
+        result = parse_exp.runTests(text, comment=None, printResults=False)[0]
+    return result
 
 
 def find_format(text: str, parse_exp: pp.ParserElement) -> tuple:
     match = tuple(parse_exp.scanString(text))
     return match
 
+
+def match_format(text: str, parse_exp: pp.ParserElement):
+    match = parse_exp.runTests(text, comment=None, printResults=False)
+    if match[0]:
+        return pp.ParseResults(match[1][0][1])
 
 # def match_format(text: str, parse_exp):
 #    pass

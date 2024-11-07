@@ -51,31 +51,46 @@ class StepText(TypeStep):
 
 
 class StepString(TypeStep):
-    title: str = ""
     text: str = ""
-    code: str = ""
-    cost: int = 0
+    match_substring: bool = False
+    case_sensitive: bool = False
+    use_re: bool = False
+    answer: str = ""
     json_data: dict = field(default_factory=dict)
 
-    def __post_init__(self):
-        self.json_data = {
-            "stepSource": {
-                "block": {
-                    "name": "string",
-                    "text": self.text,
-                    "source": {
-                        "code": self.code,
-                    },
-                },
-                "cost": self.cost,
-            }
-        }
+    def __repr__(self):
+        return f"StepString()"
 
     def parse(self, markdown: list[str]) -> None:
-        pass
+        if not PPF.check_format(markdown[0], PPF.format_step_string_name, from_start=True):
+            raise SyntaxError("Step:String was set incorrectly")
 
-    def body(self):
-        pass
+        text = []
+        for line in markdown:
+            if PPF.check_format(line, PPF.format_answer, from_start=True):
+                self.answer = PPF.match_format(line, PPF.format_answer)["answer"]
+            else:
+                text.append(line)
+        self.text = "\n".join(text)
+
+        self.build_body()
+
+    def build_body(self) -> None:
+        self.json_data = {
+            "block": {
+                "name": "string",
+                "text": self.text,
+                "source": {
+                    "pattern": self.answer,
+                    "code": "",
+                    "match_substring": self.match_substring,
+                    "case_sensitive": self.case_sensitive,
+                    "use_re": self.use_re,
+                    "is_file_disabled": True,
+                    "is_text_disabled": False,
+                },
+            }
+        }
 
 
 class StepNumber(TypeStep):
@@ -86,7 +101,12 @@ class StepNumber(TypeStep):
     cost: int = 0
     json_data: dict = field(default_factory=dict)
 
-    def __post_init__(self):
+    def parse(self, markdown: list[str]) -> None:
+
+
+        self.build_body()
+
+    def build_body(self):
         self.json_data = {
             "stepSource": {
                 "block": {
@@ -105,12 +125,6 @@ class StepNumber(TypeStep):
             }
         }
 
-    def parse(self, markdown: list[str]) -> None:
-        pass
-
-    def body(self):
-        pass
-
 
 class StepQuiz(TypeStep):
     title: str = ""
@@ -119,9 +133,11 @@ class StepQuiz(TypeStep):
     cost: int = 0
     json_data: dict = field(default_factory=dict)
 
-    def __post_init__(self):
+    def parse(self, markdown: list[str]) -> None:
+        pass
+
+    def build_body(self):
         self.json_data = {
-            "stepSource": {
                 "block": {
                     "name": "choice",
                     "text": self.text,
@@ -138,14 +154,7 @@ class StepQuiz(TypeStep):
                         "is_options_feedback": False,
                     },
                 }
-            }
         }
-
-    def parse(self, markdown: list[str]) -> None:
-        pass
-
-    def body(self):
-        pass
 
 
 class StepTask(TypeStep):
