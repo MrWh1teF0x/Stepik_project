@@ -248,3 +248,36 @@ def test_StepFill():
     lesson.delete_step(-1)
 
     assert lesson.get_steps_ids() == STEP_IDS
+
+
+def test_StepTable():
+    lesson = OnlineLesson(id=LESSON_ID)
+
+    step_table = OnlineStep(
+        StepTable(
+            cost=4,
+            lesson_id=LESSON_ID,
+            position=10,
+            description="Страны",
+            table=Table(
+                rows={
+                    "Никарагуа": [False, False, False, False, True],
+                    "Франция": [False, True, False, False, False],
+                    "Германия": [False, False, False, True, False],
+                    "Россия": [True, False, False, False, False],
+                    "Япония": [False, False, True, False, False],
+                },
+                columns=["Москва", "Париж", "Токио", "Берлин", "Манагуа"],
+            ),
+        )
+    )
+    lesson.add_step(step_table)
+
+    step_table_2 = OnlineStep(id=lesson.get_steps_ids()[-1])
+    step_table_3 = OnlineStep(id=step_table.id)
+
+    assert step_table.info() == step_table_2.info() == step_table_3.info()
+
+    lesson.delete_step(-1)
+
+    assert lesson.get_steps_ids() == STEP_IDS
