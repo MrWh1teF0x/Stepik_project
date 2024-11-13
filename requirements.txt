@@ -2,3 +2,4 @@ pyyaml
 requests
 pytest
 pyparsing
+click
