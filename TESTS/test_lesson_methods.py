@@ -156,7 +156,31 @@ def test_StepTask():
             break
         info = step_task.info()
 
-    assert step_task_2.info() == step_task_3.info() == step_task.info()
+    assert step_task.info() == step_task_2.info() == step_task_3.info()
+
+    lesson.delete_step(-1)
+
+    assert lesson.get_steps_ids() == STEP_IDS
+
+
+def test_StepSort():
+    lesson = OnlineLesson(id=LESSON_ID)
+
+    step_sort = OnlineStep(
+        StepSort(
+            text="Расставь от самого маленького до самого большого животного.",
+            cost=4,
+            lesson_id=LESSON_ID,
+            position=10,
+            sorted_answers=["Мышь", "Собака", "Слон", "Синий кит"],
+        )
+    )
+    lesson.add_step(step_sort)
+
+    step_sort_2 = OnlineStep(id=lesson.get_steps_ids()[-1])
+    step_sort_3 = OnlineStep(id=step_sort.id)
+
+    assert step_sort.info() == step_sort_2.info() == step_sort_3.info()
 
     lesson.delete_step(-1)
 
