@@ -124,3 +124,40 @@ def test_StepString():
     lesson.delete_step(-1)
 
     assert lesson.get_steps_ids() == STEP_IDS
+
+
+def test_StepTask():
+    lesson = OnlineLesson(id=LESSON_ID)
+
+    step_task = OnlineStep(
+        StepTask(
+            text="Напишите программу, которая считывает 2 числа и выводит сначала их произведение, а потом сумму. Вывести через пробел",
+            cost=10,
+            lesson_id=LESSON_ID,
+            position=10,
+            test_cases=[
+                TaskTest("1 5\n", "5 6\n"),
+                TaskTest("-1 1\n", "-1 0\n"),
+                TaskTest("10 0\n", "0 10\n"),
+                TaskTest("5 8\n", "40 13\n"),
+            ],
+            samples_count=1,
+        )
+    )
+    lesson.add_step(step_task)
+
+    step_task_2 = OnlineStep(id=lesson.get_steps_ids()[-1])
+    step_task_3 = OnlineStep(id=step_task.id)
+
+    # Здесь нужно несколько раз делать GET запрос, так как Stepik'у нужно некоторое время, чтобы добавить задачу на программирование
+    info = step_task.info()
+    while True:
+        if info["steps"][0]["status"] == "ready":
+            break
+        info = step_task.info()
+
+    assert step_task_2.info() == step_task_3.info() == step_task.info()
+
+    lesson.delete_step(-1)
+
+    assert lesson.get_steps_ids() == STEP_IDS
