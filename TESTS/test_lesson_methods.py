@@ -214,3 +214,37 @@ def test_StepMatch():
     lesson.delete_step(-1)
 
     assert lesson.get_steps_ids() == STEP_IDS
+
+
+def test_StepFill():
+    lesson = OnlineLesson(id=LESSON_ID)
+
+    step_fill = OnlineStep(
+        StepFill(
+            cost=4,
+            lesson_id=LESSON_ID,
+            position=10,
+            components=[
+                BlankText(text="Висит груша, нельзя скушать. Что это?"),
+                BlankInput(answers=[Answer("лампочка", is_correct=True)]),
+                BlankText(text="Выбери животное, которое быстрее всех бегает."),
+                BlankSelect(
+                    answers=[
+                        Answer(text="Гепард", is_correct=True),
+                        Answer(text="Черепаха", is_correct=False),
+                        Answer(text="Олень", is_correct=False),
+                    ]
+                ),
+            ],
+        )
+    )
+    lesson.add_step(step_fill)
+
+    step_fill_2 = OnlineStep(id=lesson.get_steps_ids()[-1])
+    step_fill_3 = OnlineStep(id=step_fill.id)
+
+    assert step_fill.info() == step_fill_2.info() == step_fill_3.info()
+
+    lesson.delete_step(-1)
+
+    assert lesson.get_steps_ids() == STEP_IDS
