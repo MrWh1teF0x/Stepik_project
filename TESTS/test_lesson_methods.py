@@ -185,3 +185,32 @@ def test_StepSort():
     lesson.delete_step(-1)
 
     assert lesson.get_steps_ids() == STEP_IDS
+
+
+def test_StepMatch():
+    lesson = OnlineLesson(id=LESSON_ID)
+
+    step_match = OnlineStep(
+        StepMatch(
+            text="Расставь правильно вид и царство, к которому принадлежит вид",
+            cost=4,
+            lesson_id=LESSON_ID,
+            position=10,
+            pairs=[
+                MatchPair("Опята", "Грибы"),
+                MatchPair("Муравей", "Животные"),
+                MatchPair("Шиповник", "Растения"),
+                MatchPair("Инфузория туфелька", "Бактерии"),
+            ],
+        )
+    )
+    lesson.add_step(step_match)
+
+    step_match_2 = OnlineStep(id=lesson.get_steps_ids()[-1])
+    step_match_3 = OnlineStep(id=step_match.id)
+
+    assert step_match.info() == step_match_2.info() == step_match_3.info()
+
+    lesson.delete_step(-1)
+
+    assert lesson.get_steps_ids() == STEP_IDS
