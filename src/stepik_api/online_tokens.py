@@ -80,6 +80,9 @@ class OnlineLesson:
         return json.loads(responce.text)
 
     def add_step(self, step: OnlineStep):
+        if len(self.steps) == 16:
+            raise OverflowError("Maximum amount of steps in lesson - 16!")
+
         position = step.step_data.position
         self.steps.insert(position, step)
 
@@ -97,6 +100,9 @@ class OnlineLesson:
     def update(self, steps: list[OnlineStep]):
         if not self.id:
             raise AttributeError("This lesson has no id!")
+
+        if len(steps) > 16:
+            raise OverflowError("Maximum amount of steps in lesson - 16!")
 
         if len(self.steps) > len(steps):
             while len(self.steps) != len(steps):
