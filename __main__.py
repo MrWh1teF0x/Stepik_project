@@ -4,6 +4,8 @@ from src.stepik_api.logged_session import *
 
 
 def main():
+    setup_logger(1, 1)
+
     init_secret_fields()
 
 
