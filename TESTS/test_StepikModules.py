@@ -1,12 +1,11 @@
-from stepik_api.online_tokens import OnlineLesson
+from src.Parse_Classes.LessonParsers import Lesson
 from src.PyParseFormats import *
 import pytest
 
 
 def test_Lesson_init():
-    a1 = OnlineLesson()
+    a1 = Lesson()
     # wrong calls ----------------------------------------------------------------
-    assert a1.file is None
     with pytest.warns(UserWarning):
         a1_file = a1.read_file(r"..\files\sadmple_1.md")
     assert a1_file == []
@@ -31,7 +30,7 @@ def test_Lesson_init():
         "### Header 3",
     ]
     # path set
-    a2 = OnlineLesson(r"..\files\test.md")
+    a2 = Lesson(r"..\files\test.md")
     a1_file = a1.read_file(a2.f_path)
 
     a1.f_path = r"..\files\sample_1.md"
@@ -45,15 +44,21 @@ def test_Lesson_init():
 
 
 def test_PyParse_check_format():
-    a_res = format_lesson_id.parseString("lesson = 123")
-    assert a_res.asList() == ["lesson", "=", "123"]
-    assert a_res.asDict() == {"lesson_id": "123"}
+    a1_res = format_lesson_id.parseString("lesson = 123")
+    assert a1_res.asList() == ["lesson", "=", "123"]
+    assert a1_res.asDict() == {"lesson_id": "123"}
+    a2_res = format_lesson_id.parseString("lesson=123")
+    assert a1_res.asList() == ["lesson", "=", "123"]
+    assert a1_res.asDict() == {"lesson_id": "123"}
     b_res = format_lesson_name.parseString("#    Lesson 1      ")
     assert b_res.asList() == ["#", "Lesson 1      "]
     assert b_res.asDict() == {"lesson_name": "Lesson 1      "}
     c_res = format_step_name.parseString("##\t\t\t dq21eoi1 231o231238")
     assert c_res.asList() == ["##", "dq21eoi1 231o231238"]
     assert c_res.asDict() == {"step_name": "dq21eoi1 231o231238"}
+    d_res = format_step_name.parseString("## 123")
+    assert d_res.asList() == ["##", "123"]
+    assert d_res.asDict() == {"step_name": "123"}
 
     a = format_lesson_id.runTests("lesson = 123", printResults=False)
     assert a[0]
@@ -62,7 +67,7 @@ def test_PyParse_check_format():
     a_1 = format_lesson_name.runTests(
         "  #   123123123", comment=None, printResults=False
     )
-    assert a[0]
+    assert a_1[0]
 
     b = format_lesson_name.runTests(
         "  #    Lesson 1      ", comment=None, printResults=False
@@ -94,10 +99,10 @@ def test_PyParse_check_format():
 
 
 def test_Lesson_parse_id_and_name():
-    a1 = OnlineLesson(r"..\files\test.md")
-    a2 = OnlineLesson()
-    a3 = OnlineLesson(r"..\files\sample_2.md")
-    a4 = OnlineLesson()
+    a1 = Lesson(r"..\files\test.md")
+    a2 = Lesson()
+    a3 = Lesson(r"..\files\sample_1.md")
+    a4 = Lesson()
 
     with pytest.warns(UserWarning):
         a1.parse()
@@ -116,3 +121,13 @@ def test_Lesson_parse_id_and_name():
         a4.parse()
     assert a4.name == ""
     assert a4.id == -1
+
+
+def test_Steps():
+    lesson = Lesson(r"..\files\debug.md")
+    lesson.parse()
+
+    steps = lesson.steps
+    print()
+    for s in steps:
+        print(s.json_data)
