@@ -1,7 +1,14 @@
 import pyparsing as pp
+import markdown as md
 
 # WARNING: pyparsing can cause errors with encodings (unicode) ----------------------------------------------------- !!!
 import re
+
+
+def md_to_html(md_text: list[str] | str):
+    if isinstance(md_text, list):
+        md_text = "\n".join(md_text)
+    return md.markdown(md_text, extensions=['extra'])
 
 
 class HiddenFormats:

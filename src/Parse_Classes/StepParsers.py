@@ -37,7 +37,7 @@ class StepText(TypeStep):
                     "Step:Text was set or written incorrectly - Impossible ERROR"
                 )
 
-        self.text = "\n".join(markdown)
+        self.text = PPF.md_to_html("\n".join(markdown))
 
         self.build_body()
 

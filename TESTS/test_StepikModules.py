@@ -48,8 +48,8 @@ def test_PyParse_check_format():
     assert a1_res.asList() == ["lesson", "=", "123"]
     assert a1_res.asDict() == {"lesson_id": "123"}
     a2_res = format_lesson_id.parseString("lesson=123")
-    assert a1_res.asList() == ["lesson", "=", "123"]
-    assert a1_res.asDict() == {"lesson_id": "123"}
+    assert a2_res.asList() == ["lesson", "=", "123"]
+    assert a2_res.asDict() == {"lesson_id": "123"}
     b_res = format_lesson_name.parseString("#    Lesson 1      ")
     assert b_res.asList() == ["#", "Lesson 1      "]
     assert b_res.asDict() == {"lesson_name": "Lesson 1      "}
