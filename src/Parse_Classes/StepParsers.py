@@ -15,7 +15,7 @@ class TypeStep(ABC):
         return f"TypeStep()"
 
     @abstractmethod
-    def parse(self, markdown: list[str]):
+    def parse(self, markdown: list[str]) -> None:
         pass
 
     @abstractmethod
