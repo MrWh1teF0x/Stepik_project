@@ -29,6 +29,7 @@ class Lesson:
             warnings.warn(UserWarning("File not found or doesn't exist"), stacklevel=2)
         except Exception:
             warnings.warn(UserWarning("Unknown Error in Lesson.read_file()"), stacklevel=2)
+        return []
 
     def parse(self, f_path: str = ""):
         self.steps = []

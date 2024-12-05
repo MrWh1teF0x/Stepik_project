@@ -14,11 +14,11 @@ def test_Lesson_init():
     with pytest.warns(UserWarning):
         a1_file = a1.read_file(r"")
     assert a1_file == []
-    assert a1.f_path is ""
+    assert a1.f_path is None
     # correct call ---------------------------------------------------------------
     a1_file = a1.read_file(r"..\files\test.md")
     assert a1_file == [
-        "# This is a test file",
+        "## This is a test file",
         "it is only used for testing purposes",
         "",
         "* 1",
@@ -148,4 +148,3 @@ def test_Step_Quiz():
             "",
             "ANSWER: A, B"
             ]
-    search_format_in_text(text,  )
