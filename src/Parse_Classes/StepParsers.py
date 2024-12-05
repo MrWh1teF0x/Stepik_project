@@ -4,31 +4,33 @@ from abc import ABC, abstractmethod
 import warnings
 
 
+@dataclass
 class TypeStep(ABC):
-    json_data: dict = field(default_factory=dict)
-
-    def __init__(self, markdown: list[str] | None = None):
-        if markdown is not None:
-            self.parse(markdown)
+    title: str = ""
+    text: str = ""
+    cost: int = 0
+    lesson_id: int = None
+    position: int = None
 
     def __repr__(self):
-        return f"TypeStep()"
+        return f"TypeStep({self.title})"
+
+    def __pre_parse(self, markdown: list[str]):
+        pass  # TODO: make title and config parsing
 
     @abstractmethod
     def parse(self, markdown: list[str]) -> None:
         pass
 
     @abstractmethod
-    def build_body(self):
-        self.json_data = {"block": {}}
+    def body(self) -> dict:
+        return {}
 
 
+@dataclass
 class StepText(TypeStep):
-    text: str = ""
-    json_data: dict = field(default_factory=dict)
-
     def __repr__(self):
-        return f"StepText()"
+        return f"StepText({self.title})"
 
     def parse(self, markdown: list[str]) -> None:
         if not PPF.check_format(markdown[0], PPF.format_step_text_name):
@@ -36,30 +38,35 @@ class StepText(TypeStep):
                 raise SyntaxError(
                     "Step:Text was set or written incorrectly - Impossible ERROR"
                 )
+        self.title = PPF.match_format(markdown[0], PPF.format_step_text_name)["step_name"]
 
         self.text = PPF.md_to_html(markdown)
 
-        self.build_body()
+        self.body()
 
-    def build_body(self) -> None:
-        self.json_data = {
-            "block": {
-                "name": "text",
-                "text": self.text,
+    def body(self) -> dict:
+        return {
+            "stepSource": {
+                "block": {
+                    "name": "text",
+                    "text": self.text,
+                },
+                "lesson": self.lesson_id,
+                "position": self.position,
+                "cost": self.cost,
             }
         }
 
 
+@dataclass
 class StepString(TypeStep):
-    text: str = ""
     match_substring: bool = False
     case_sensitive: bool = False
     use_re: bool = False
     answer: str = ""
-    json_data: dict = field(default_factory=dict)
 
     def __repr__(self):
-        return f"StepString()"
+        return f"StepString({self.title})"
 
     def parse(self, markdown: list[str]) -> None:
         if not PPF.check_format(markdown[0], PPF.format_step_string_name, _from_start=True):
@@ -74,36 +81,38 @@ class StepString(TypeStep):
                 text.append(line)
         self.text = PPF.md_to_html(text)
 
-        self.build_body()
+        self.body()
 
-    def build_body(self) -> None:
-        self.json_data = {
-            "block": {
-                "name": "string",
-                "text": self.text,
-                "source": {
-                    "pattern": self.answer,
-                    "code": "",
-                    "match_substring": self.match_substring,
-                    "case_sensitive": self.case_sensitive,
-                    "use_re": self.use_re,
-                    "is_file_disabled": True,
-                    "is_text_disabled": False,
+    def body(self) -> dict:
+        return {
+            "stepSource": {
+                "block": {
+                    "name": "string",
+                    "text": self.text,
+                    "source": {
+                        "pattern": self.answer,
+                        "code": "",
+                        "match_substring": self.match_substring,
+                        "case_sensitive": self.case_sensitive,
+                        "use_re": self.use_re,
+                        "is_file_disabled": True,
+                        "is_text_disabled": False,
+                    },
                 },
+                "lesson": self.lesson_id,
+                "position": self.position,
+                "cost": self.cost,
             }
         }
 
 
+@dataclass
 class StepNumber(TypeStep):
-    title: str = ""
-    text: str = ""
     answer: float = None
     max_error: float = None
-    cost: int = 0
-    json_data: dict = field(default_factory=dict)
 
     def __repr__(self):
-        return f"StepNumber()"
+        return f"StepNumber({self.title})"
 
     def parse(self, markdown: list[str]) -> None:
         if not PPF.check_format(markdown[0], PPF.format_step_number_name, _from_start=True):
@@ -120,32 +129,34 @@ class StepNumber(TypeStep):
                 text.append(line)
         self.text = PPF.md_to_html(text)
 
-        self.build_body()
+        self.body()
 
-    def build_body(self):
-        self.json_data = {
-            "block": {
-                "name": "number",
-                "text": self.text,
-                "source": {
-                    "options": [
-                        {
-                            "answer": str(self.answer),
-                            "max_error": str(self.max_error),
-                        }
-                    ]
+    def body(self) -> dict:
+        return {
+            "stepSource": {
+                "block": {
+                    "name": "number",
+                    "text": self.text,
+                    "source": {
+                        "options": [
+                            {
+                                "answer": str(self.answer),
+                                "max_error": str(self.max_error),
+                            }
+                        ]
+                    },
                 },
+                "lesson": self.lesson_id,
+                "position": self.position,
+                "cost": self.cost,
             }
         }
 
 
+@dataclass
 class StepQuiz(TypeStep):
-    title: str = ""
-    text: str = ""
     answers: list[tuple[str, bool]] = field(default_factory=list)
-    cost: int = 0
-    json_data: dict = field(default_factory=dict)
-    do_shuffle: bool
+    do_shuffle: bool = True
 
     def __repr__(self):
         return f"StepQuiz()"
@@ -187,13 +198,10 @@ class StepQuiz(TypeStep):
                 raise SyntaxError(f"In {self}: no AIKEN quiz options given")
 
         # parse for quiz options ----------------------------------------------
-
         running = True
         while running:
             line = markdown[i]
-
             if PPF.check_format(line, PPF.format_quiz_option):
-                options[-1][1] = "\n".join(options[-1][1])
                 p_res = PPF.match_format(line, PPF.format_quiz_option)
                 options.append([p_res["letter"], [p_res["text"]]])
                 i += 1
@@ -202,7 +210,6 @@ class StepQuiz(TypeStep):
                 options[-1][1].append(line)
                 i += 1
             else:
-                options[-1][1] = "\n".join(options[-1][1])
                 running = False
 
             if i >= len(markdown):
@@ -231,60 +238,275 @@ got "{options[i][0]}" instead""")
 
         self.text = PPF.md_to_html(text)
         self.answers = [(PPF.md_to_html(text), letter in ans) for letter, text in options]
-        self.do_shuffle = True if do_shuffle is None else do_shuffle
+        self.do_shuffle = self.do_shuffle if do_shuffle is None else do_shuffle
 
-        self.build_body()
+        self.body()
 
-    def build_body(self):
-        self.json_data = {
-            "block": {
-                "name": "choice",
-                "text": self.text,
-                "source": {
-                    "options": [
-                        {"text": ans[0], "is_correct": ans[1], "feedback": ""}
-                        for ans in self.answers
-                    ],
-                    "is_always_correct": False,
-                    "is_html_enabled": True,  # allow html in options
-                    "sample_size": len(self.answers),
-                    "is_multiple_choice": len(self.answers) > 1,
-                    "preserve_order": not self.do_shuffle,
-                    "is_options_feedback": False,
+    def body(self) -> dict:
+        return {
+            "stepSource": {
+                "block": {
+                    "name": "choice",
+                    "text": self.text,
+                    "source": {
+                        "options": [
+                            {"text": ans[0], "is_correct": ans[1], "feedback": ""}
+                            for ans in self.answers
+                        ],
+                        "is_always_correct": False,
+                        "is_html_enabled": True,  # allow html in options
+                        "sample_size": len(self.answers),
+                        "is_multiple_choice": len(self.answers) > 1,
+                        "preserve_order": not self.do_shuffle,
+                        "is_options_feedback": False,
+                    },
                 },
+                "lesson": self.lesson_id,
+                "position": self.position,
+                "cost": self.cost,
             }
         }
 
 
-class StepTask(TypeStep):
-    title: str = ""
-    text: str = ""
-    code: str = ""
-    test_cases: list[str] = field(default_factory=list)
-    cost: int = 0
-    json_data: dict = field(default_factory=dict)
+@dataclass
+class TaskTest:
+    input: str = ""
+    output: str = ""
 
-    def __post_init__(self):
-        self.json_data = {
+
+class StepTask(TypeStep):
+    code: str = ""
+    samples_count: int = 1
+    execution_time_limit: int = 5
+    execution_memory_limit: int = 256
+    test_cases: list[TaskTest] = field(default_factory=list)
+
+    def parse(self, markdown: list[str]) -> None:
+        pass
+
+    def body(self) -> dict:
+        return {
             "stepSource": {
                 "block": {
                     "name": "code",
                     "text": self.text,
                     "source": {
-                        "code": self.code,
-                        "samples_count": len(self.test_cases),
-                        "test_cases": [self.test_cases],
+                        "code": "def generate():\n    return []\n\ndef check(reply, clue):\n    return reply.strip() == clue.strip()\n",
+                        "samples_count": self.samples_count,
+                        "execution_time_limit": self.execution_time_limit,
+                        "execution_memory_limit": self.execution_memory_limit,
+                        "templates_data": "",
+                        "is_time_limit_scaled": True,
+                        "is_memory_limit_scaled": True,
+                        "is_run_user_code_allowed": True,
+                        "manual_time_limits": [],
+                        "manual_memory_limits": [],
+                        "test_archive": [],
+                        "test_cases": [
+                            [test.input, test.output] for test in self.test_cases
+                        ],
+                    },
+                },
+                "lesson": self.lesson_id,
+                "position": self.position,
+                "cost": self.cost,
+            }
+        }
+
+
+@dataclass
+class StepSort(TypeStep):
+    sorted_answers: list[str] = field(default_factory=list)
+
+    def parse(self, markdown: list[str]) -> None:
+        pass
+
+    def body(self) -> dict:
+        return {
+            "stepSource": {
+                "lesson": self.lesson_id,
+                "position": self.position,
+                "block": {
+                    "name": "sorting",
+                    "text": self.text,
+                    "source": {
+                        "options": [{"text": answer} for answer in self.sorted_answers]
                     },
                 },
                 "cost": self.cost,
             }
         }
 
+
+@dataclass
+class MatchPair:
+    first: str
+    second: str
+
+
+@dataclass
+class StepMatch(TypeStep):
+    preserve_firsts_order: bool = True
+    pairs: list[MatchPair] = field(default_factory=list)
+
     def parse(self, markdown: list[str]) -> None:
         pass
 
-    def body(self):
+    def body(self) -> dict:
+        return {
+            "stepSource": {
+                "lesson": self.lesson_id,
+                "position": self.position,
+                "block": {
+                    "name": "matching",
+                    "text": self.text,
+                    "source": {
+                        "preserve_firsts_order": self.preserve_firsts_order,
+                        "pairs": [
+                            {"first": pair.first, "second": pair.second}
+                            for pair in self.pairs
+                        ],
+                    },
+                },
+                "cost": self.cost,
+            }
+        }
+
+
+@dataclass
+class BlankType(ABC):
+    @abstractmethod
+    def body(self) -> dict:
         pass
+
+
+@dataclass
+class BlankText(BlankType):
+    text: str
+
+    def body(self) -> dict:
+        return {"type": "text", "text": self.text, "options": []}
+
+
+@dataclass
+class Answer:
+    text: str
+    is_correct: bool
+
+
+@dataclass
+class BlankInput(BlankType):
+    answers: list[Answer] = field(default_factory=list)
+
+    def body(self) -> dict:
+        return {
+            "type": "input",
+            "text": "",
+            "options": [
+                {"text": answer.text, "is_correct": answer.is_correct}
+                for answer in self.answers
+            ],
+        }
+
+
+@dataclass
+class BlankSelect(BlankType):
+    answers: list[Answer] = field(default_factory=list)
+
+    def body(self) -> dict:
+        return {
+            "type": "select",
+            "text": "",
+            "options": [
+                {"text": answer.text, "is_correct": answer.is_correct}
+                for answer in self.answers
+            ],
+        }
+
+
+@dataclass
+class StepFill(TypeStep):
+    is_case_sensitive: bool = False
+    is_detailed_feedback: bool = False
+    is_partially_correct: bool = False
+    components: list[BlankType] = field(default_factory=list)
+
+    def parse(self, markdown: list[str]) -> None:
+        pass
+
+    def body(self) -> dict:
+        return {
+            "stepSource": {
+                "lesson": self.lesson_id,
+                "position": self.position,
+                "block": {
+                    "name": "fill-blanks",
+                    "text": self.text,
+                    "source": {
+                        "components": [
+                            component.body() for component in self.components
+                        ],
+                        "is_case_sensitive": self.is_case_sensitive,
+                        "is_detailed_feedback": self.is_detailed_feedback,
+                        "is_partially_correct": self.is_partially_correct,
+                    },
+                },
+                "cost": self.cost,
+            }
+        }
+
+
+@dataclass
+class Table:
+    is_checkbox: bool = False
+    rows: dict[str, list[bool]] = field(default_factory=dict)
+    columns: list[str] = field(default_factory=list)
+
+    def rows_body(self):
+        return [
+            {"name": key, "columns": [{"choice": choice} for choice in self.rows[key]]}
+            for key in self.rows.keys()
+        ]
+
+    def columns_body(self):
+        return [{"name": self.columns[i]} for i in range(len(self.columns))]
+
+
+@dataclass
+class StepTable(TypeStep):
+    table: Table = None
+    is_randomize_rows: bool = False
+    is_randomize_columns: bool = False
+    is_always_correct: bool = False
+    description: str = ""
+
+    def parse(self, markdown: list[str]) -> None:
+        pass
+
+    def body(self) -> dict:
+        return {
+            "stepSource": {
+                "lesson": self.lesson_id,
+                "position": self.position,
+                "block": {
+                    "name": "table",
+                    "text": self.text,
+                    "source": {
+                        "columns": self.table.columns_body(),
+                        "rows": self.table.rows_body(),
+                        "options": {
+                            "is_checkbox": self.table.is_checkbox,
+                            "is_randomize_rows": self.is_randomize_rows,
+                            "is_randomize_columns": self.is_randomize_columns,
+                            "sample_size": -1,
+                        },
+                        "description": self.description,
+                        "is_always_correct": self.is_always_correct,
+                    },
+                },
+                "cost": self.cost,
+            }
+        }
 
 
 STEP_MAP = {
