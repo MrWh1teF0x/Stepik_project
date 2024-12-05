@@ -123,11 +123,29 @@ def test_Lesson_parse_id_and_name():
     assert a4.id == -1
 
 
-def test_Steps():
-    lesson = Lesson(r"..\files\debug.md")
-    lesson.parse()
-
-    steps = lesson.steps
+def test_Steps_formats():
     print()
-    for s in steps:
-        print(s.json_data)
+    res = match_format("A. B)", format_quiz_option)
+    print([res])
+    res = match_format("    A. B)", format_quiz_option)
+    print([res])
+    res = match_format("  . B. A) asdasd", format_quiz_option)
+    print([res])
+    res = match_format("ANSWER: A, B", format_quiz_answer)
+    print([res])
+    res = match_format("TRUE", HiddenFormats._bool)
+    print([res])
+    res = match_format("SHUFFLE: TRUE", format_quiz_shuffle)
+    print([res])
+
+def test_Step_Quiz():
+    text = ["## QUIZ quiz",
+            "some text",
+            "more text",
+            "",
+            "A) a"
+            "B) b"
+            "",
+            "ANSWER: A, B"
+            ]
+    search_format_in_text(text,  )
