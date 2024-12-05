@@ -16,17 +16,18 @@ class HiddenFormats:
     _del_spaces = pp.Suppress(pp.White())
     _h1 = pp.Keyword("#")
     _h2 = pp.Keyword("##")
-    # ------------------------------------------------------------------------------------------------------------------
-    # format_answer            -> [("ANSWER:", *line_of_text*), {'answer': *line_of_text*}]
-    f_ans = pp.Literal("ANSWER:") + _del_spaces + (pp.restOfLine())("answer")
     _float_number = pp.Combine(pp.Optional("-") + pp.Word(pp.nums) + "," + pp.Word(pp.nums))
     _ans = pp.Literal("ANSWER:")
+    # ==================================================================================================================
+    # format_string_answer     -> [("ANSWER:", *line_of_text*), {'answer': *line_of_text*}]
+    f_str_ans = _ans + _del_spaces + (pp.restOfLine())("answer")
+
     # format_number_answer     -> [("ANSWER:", *number*, *number*), {'answer': *number*, 'error': *number* or None})]
     f_num_ans = _ans + _float_number("answer") + pp.Optional(pp.Suppress("±") + _float_number)("adm_err")
 
 
     # format_reg_exp           -> [("ANSWER:", *line_of_text*), {'answer': *line_of_text*}]
-    f_regexp = pp.Literal("REGEXP:") + _del_spaces + (pp.restOfLine())("answer")
+    f_regexp = pp.Literal("REGEXP:") + _del_spaces + (pp.restOfLine())("reg_exp")
 
     # format_lesson_id         -> [("lesson", "=", *number*) {'lesson': *number*}]
     f_les_id = pp.Literal("lesson") + "=" + pp.Word(pp.nums)("lesson_id")
@@ -46,9 +47,9 @@ class HiddenFormats:
     # format_step_number_name  -> [("##", "NUMBER", *line_of_text*), {step_name: *line_of_text*}]
     f_st_num_name = _h2 + pp.Keyword("NUMBER") + _del_spaces + (pp.restOfLine())("step_name")
 
-format_reg_exp = 0
 format_string_answer = HiddenFormats.f_str_ans
 '''**]==parse==>** [ ("ANSWER:", *line_of_text*), {'answer': *line_of_text*} ]'''
+format_reg_exp = HiddenFormats.f_regexp
 format_number_answer = HiddenFormats.f_num_ans
 format_lesson_id = HiddenFormats.f_les_id
 
