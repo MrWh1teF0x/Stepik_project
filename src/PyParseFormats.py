@@ -19,6 +19,11 @@ class HiddenFormats:
     # ------------------------------------------------------------------------------------------------------------------
     # format_answer            -> [("ANSWER:", *line_of_text*), {'answer': *line_of_text*}]
     f_ans = pp.Literal("ANSWER:") + _del_spaces + (pp.restOfLine())("answer")
+    _float_number = pp.Combine(pp.Optional("-") + pp.Word(pp.nums) + "," + pp.Word(pp.nums))
+    _ans = pp.Literal("ANSWER:")
+    # format_number_answer     -> [("ANSWER:", *number*, *number*), {'answer': *number*, 'error': *number* or None})]
+    f_num_ans = _ans + _float_number("answer") + pp.Optional(pp.Suppress("±") + _float_number)("adm_err")
+
 
     # format_reg_exp           -> [("ANSWER:", *line_of_text*), {'answer': *line_of_text*}]
     f_regexp = pp.Literal("REGEXP:") + _del_spaces + (pp.restOfLine())("answer")
@@ -38,16 +43,20 @@ class HiddenFormats:
     # format_step_string_name  -> [("##", "STRING", *line_of_text*), {step_name: *line_of_text*}]
     f_st_str_name = _h2 + pp.Keyword("STRING") + _del_spaces + (pp.restOfLine())("step_name")
 
+    # format_step_number_name  -> [("##", "NUMBER", *line_of_text*), {step_name: *line_of_text*}]
+    f_st_num_name = _h2 + pp.Keyword("NUMBER") + _del_spaces + (pp.restOfLine())("step_name")
 
-format_answer = HiddenFormats.f_ans
 format_reg_exp = 0
+format_string_answer = HiddenFormats.f_str_ans
+'''**]==parse==>** [ ("ANSWER:", *line_of_text*), {'answer': *line_of_text*} ]'''
+format_number_answer = HiddenFormats.f_num_ans
 format_lesson_id = HiddenFormats.f_les_id
 
 format_lesson_name = HiddenFormats.f_les_name
 format_step_name = HiddenFormats.f_st_name
 format_step_text_name = HiddenFormats.f_st_t_name
 format_step_string_name = HiddenFormats.f_st_str_name
-
+format_step_number_name = HiddenFormats.f_st_num_name
 
 
 def search_format_in_text(
@@ -85,8 +94,8 @@ def search_format_in_text(
     return ans
 
 
-def check_format(text: str, parse_exp: pp.ParserElement, from_start: bool = False) -> bool:
-    if from_start:
+def check_format(text: str, parse_exp: pp.ParserElement, _from_start: bool = False) -> bool:
+    if _from_start:
         try:
             _ = parse_exp.parseString(text)
             result = True
@@ -102,10 +111,10 @@ def find_format(text: str, parse_exp: pp.ParserElement) -> tuple:
     return match
 
 
-def match_format(text: str, parse_exp: pp.ParserElement):
+def match_format(text: str, parse_exp: pp.ParserElement) -> pp.ParseResults:
     match = parse_exp.runTests(text, comment=None, printResults=False)
     if match[0]:
-        return pp.ParseResults(match[1][0][1])
+        return match[1][0][1]
 
 # def match_format(text: str, parse_exp):
 #    pass

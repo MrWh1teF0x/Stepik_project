@@ -62,13 +62,14 @@ class StepString(TypeStep):
         return f"StepString()"
 
     def parse(self, markdown: list[str]) -> None:
-        if not PPF.check_format(markdown[0], PPF.format_step_string_name, from_start=True):
+        if not PPF.check_format(markdown[0], PPF.format_step_string_name, _from_start=True):
             raise SyntaxError("Step:String was set incorrectly")
 
         text = []
         for line in markdown:
-            if PPF.check_format(line, PPF.format_answer, from_start=True):
-                self.answer = PPF.match_format(line, PPF.format_answer)["answer"]
+            if PPF.check_format(line, PPF.format_string_answer, _from_start=True):
+                # TODO: might want to check for a several answer tokens
+                self.answer = PPF.match_format(line, PPF.format_string_answer)["answer"]
             else:
                 text.append(line)
         self.text = "\n".join(text)
@@ -101,27 +102,39 @@ class StepNumber(TypeStep):
     cost: int = 0
     json_data: dict = field(default_factory=dict)
 
-    def parse(self, markdown: list[str]) -> None:
+    def __repr__(self):
+        return f"StepNumber()"
 
+    def parse(self, markdown: list[str]) -> None:
+        if not PPF.check_format(markdown[0], PPF.format_step_number_name, _from_start=True):
+            raise SyntaxError("Step:Number was set incorrectly")
+
+        text = []
+        for line in markdown:
+            if PPF.check_format(line, PPF.format_number_answer, _from_start=True):
+                a = PPF.match_format(line, PPF.format_number_answer)
+                self.answer = a["answer"]
+                self.max_error = a.get("adm_err", 0)
+                del a
+            else:
+                text.append(line)
+        self.text = PPF.md_to_html(text)
 
         self.build_body()
 
     def build_body(self):
         self.json_data = {
-            "stepSource": {
-                "block": {
-                    "name": "number",
-                    "text": self.text,
-                    "source": {
-                        "options": [
-                            {
-                                "answer": str(self.answer),
-                                "max_error": str(self.max_error),
-                            }
-                        ]
-                    },
+            "block": {
+                "name": "number",
+                "text": self.text,
+                "source": {
+                    "options": [
+                        {
+                            "answer": str(self.answer),
+                            "max_error": str(self.max_error),
+                        }
+                    ]
                 },
-                "cost": self.cost,
             }
         }
 
