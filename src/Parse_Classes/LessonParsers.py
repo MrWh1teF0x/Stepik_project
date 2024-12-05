@@ -8,10 +8,11 @@ class Lesson:
     id: int = -1
     name: str = ""
     steps: list[TypeStep] = field(default_factory=list[TypeStep])
-    f_path: str = ""
+    f_path: str | None = None
 
-    def __init__(self, file_path: str = ""):
-        self.set_path(file_path)  # TODO: swap to parse and add PATH_obj
+    def __init__(self, file_path: str | None = None):
+        if file_path is not None:
+            self.set_path(file_path)  # TODO: swap to parse and add PATH_obj
 
     def __repr__(self):
         return f"Lesson('{self.name}', {self.id})"
@@ -29,12 +30,10 @@ class Lesson:
         except Exception:
             warnings.warn(UserWarning("Unknown Error in Lesson.read_file()"), stacklevel=2)
 
-        return []
-
     def parse(self, f_path: str = ""):
         self.steps = []
         # check if there is something to parse ------------------------------
-        if f_path is "":
+        if f_path == "":
             if self.f_path is None:  # file wasn't loaded
                 warnings.warn(UserWarning("Nothing to parse"), stacklevel=2)
                 return
@@ -44,7 +43,7 @@ class Lesson:
 
         # parse for lesson_name and lesson_id ---------------------------------
         name_token = PPF.search_format_in_text(
-            markdown, PPF.format_lesson_name, _amount=1)
+            markdown, PPF.format_lesson_name, _amount=1, _from_start=True)
         if not name_token:
             warnings.warn(UserWarning("Lesson name is incorrect"), stacklevel=2)
             return
