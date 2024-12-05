@@ -37,7 +37,7 @@ class StepText(TypeStep):
                     "Step:Text was set or written incorrectly - Impossible ERROR"
                 )
 
-        self.text = PPF.md_to_html("\n".join(markdown))
+        self.text = PPF.md_to_html(markdown)
 
         self.build_body()
 
@@ -72,7 +72,7 @@ class StepString(TypeStep):
                 self.answer = PPF.match_format(line, PPF.format_string_answer)["answer"]
             else:
                 text.append(line)
-        self.text = "\n".join(text)
+        self.text = PPF.md_to_html(text)
 
         self.build_body()
 
