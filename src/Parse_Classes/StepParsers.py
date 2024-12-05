@@ -158,6 +158,7 @@ class StepNumber(TypeStep):
 class StepQuiz(TypeStep):
     answers: list[tuple[str, bool]] = field(default_factory=list)
     do_shuffle: bool = True
+    is_multiple_choice: bool = True
 
     def __repr__(self):
         return f"StepQuiz()"
@@ -239,6 +240,7 @@ got "{options[i][0]}" instead""")
 
         self.text = PPF.md_to_html(text)
         self.answers = [(PPF.md_to_html(text), letter in ans) for letter, text in options]
+        self.is_multiple_choice = len(ans) > 1
         self.do_shuffle = self.do_shuffle if do_shuffle is None else do_shuffle
 
         self.body()
@@ -257,7 +259,7 @@ got "{options[i][0]}" instead""")
                         "is_always_correct": False,
                         "is_html_enabled": True,  # allow html in options
                         "sample_size": len(self.answers),
-                        "is_multiple_choice": len(self.answers) > 1,
+                        "is_multiple_choice": self.is_multiple_choice,
                         "preserve_order": not self.do_shuffle,
                         "is_options_feedback": False,
                     },
