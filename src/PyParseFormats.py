@@ -62,18 +62,31 @@ format_step_number_name = HiddenFormats.f_st_num_name
 def search_format_in_text(
         text: list[str],
         parse_exp: pp.ParserElement,
-        max_amount: int = -1,
-        from_start: bool = False
-):
-    """returns tuple(ParseResults, line_index, start_index_in_line, end_index_in_line).
-    if max_amount < 0, that means we search all inclusions of format"""
-    if max_amount == 0:
-        return ()
+        _from_line: int | None = None,
+        _to_line: int | None = None,
+        _amount: int = -1,
+        _from_start: bool = False, ) -> list[tuple[pp.ParseResults, int, int, int]]:
+    """Returns: tuple[ParseResults, line_index, start_index_in_line, end_index_in_line].
 
-    ans = []
-    for line_i in range(len(text)):
+    - ``_from_line`` index of line to search from (works like with slices).
+    - ``_to_line`` index of line to end your search (works like with slices).
+    - ``_amount`` how many tokens to search for (if _amount < 0, then search for all inclusions).
+    - ``_from_start`` if True: will be searching for token from the start of a line.
+    """
+    if _amount == 0:
+        return []
 
-        if from_start:
+    _from_line = 0 if _from_line is None else _from_line
+    _from_line = _from_line % len(text) if _from_line >= -len(text) else _from_line
+    _from_line = max(_from_line, 0)
+
+    _to_line = len(text) if _to_line is None else _to_line
+    _to_line = _to_line % len(text) if _to_line >= -len(text) else _to_line
+    _to_line = min(len(text), _to_line)
+
+    ans: list[tuple[pp.ParseResults, int, int, int]] = []
+    for line_i in range(_from_line, _to_line):
+        if _from_start:
             try:
                 res = ((parse_exp.parseString(text[line_i]), 0, len(text[line_i])),)
                 # TODO: add a way to find end of token in line
@@ -87,8 +100,8 @@ def search_format_in_text(
                 ans.append(
                     (l_res[0], line_i, l_res[1], l_res[2])
                 )  # (ParseRes(), line_i, token_start, token_end)
-                max_amount -= 1
-                if max_amount == 0:
+                _amount -= 1
+                if _amount == 0:
                     break
 
     return ans
