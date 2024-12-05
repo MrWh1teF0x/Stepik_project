@@ -132,19 +132,19 @@ def search_format_in_text(
     _from_line = max(_from_line, 0)
 
     _to_line = len(text) if _to_line is None else _to_line
-    _to_line = _to_line % len(text) if _to_line >= -len(text) else _to_line
+    _to_line = _to_line % len(text) if 0 > _to_line >= -len(text) else _to_line
     _to_line = min(len(text), _to_line)
 
     ans: list[tuple[pp.ParseResults, int, int, int]] = []
     for line_i in range(_from_line, _to_line):
         if _from_start:
             try:
-                res = ((parse_exp.parseString(text[line_i]), 0, len(text[line_i])),)
+                res = ((parse_exp.parse_string(text[line_i]), 0, len(text[line_i])),)
                 # TODO: add a way to find end of token in line
             except Exception:
                 res = ()
         else:
-            res = tuple(parse_exp.scan_string(text[line_i]))
+            res = tuple(parse_exp.scan_string(text[line_i], ))
 
         if res != ():
             for l_res in res:
