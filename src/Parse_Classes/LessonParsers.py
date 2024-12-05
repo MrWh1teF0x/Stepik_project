@@ -4,14 +4,6 @@ from src.Parse_Classes.StepParsers import *
 import src.PyParseFormats as PPF
 
 
-STEP_MAP = {
-    PPF.format_step_text_name: StepText,
-    PPF.format_step_string_name: StepString,
-    PPF.format_step_number_name: StepNumber,
-}
-default_step_format = StepText
-
-
 class Lesson:
     id: int = -1
     name: str = ""
