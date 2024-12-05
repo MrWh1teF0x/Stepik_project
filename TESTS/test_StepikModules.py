@@ -3,6 +3,9 @@ from src.PyParseFormats import *
 import pytest
 
 
+__do_debug = True
+
+
 def test_Lesson_init():
     a1 = Lesson()
     # wrong calls ----------------------------------------------------------------
@@ -76,6 +79,9 @@ def test_PyParse_check_format():
     assert b[1][0][1].asList() == ["#", "Lesson 1"]
     assert b[1][0][1].asDict() == {"lesson_name": "Lesson 1"}
 
+    c = check_format("", format_lesson_id)
+    assert not c
+
     match_b = find_format("# lesson 1 \n # 123123123", format_lesson_name)
     assert match_b[0][0].asList() == ["#", "lesson 1 "]
     assert match_b[1][0].asList() == ["#", "123123123"]
@@ -93,6 +99,11 @@ def test_PyParse_check_format():
     ]
     res_a = search_format_in_text(text_a, format_lesson_id)
     assert 123123123 == int(res_a[0][0]["lesson_id"])
+
+    a = "A. `len(s)`"
+    assert check_format(a, format_quiz_option)
+    b = "A."
+    assert check_format(b, format_quiz_option)
 
 
 # search_format_in_text (max_amount = 0)
@@ -122,6 +133,26 @@ def test_Lesson_parse_id_and_name():
     assert a4.name == ""
     assert a4.id == -1
 
+
+def test_Steps_creation():
+    if __do_debug:
+        print()
+        print("Start: test_Steps_creation")
+    lesson1 = Lesson(r"..\files\sample_1.md")
+    lesson1.parse()
+    assert lesson1.name == "Установка python"
+    assert lesson1.id == 483387
+    if __do_debug:
+        print(lesson1.f_path)
+        print(lesson1.steps)
+
+    lesson2 = Lesson(r"..\files\debug.md")
+    lesson2.parse()
+    assert lesson2.name == "Установка python"
+    assert lesson2.id == 483387
+    if __do_debug:
+        print(lesson2.f_path)
+        print(lesson2.steps)
 
 def test_Steps_formats():
     print()

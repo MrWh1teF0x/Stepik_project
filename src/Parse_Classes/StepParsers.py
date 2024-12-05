@@ -38,7 +38,8 @@ class StepText(TypeStep):
                 raise SyntaxError(
                     "Step:Text was set or written incorrectly - Impossible ERROR"
                 )
-        self.title = PPF.match_format(markdown[0], PPF.format_step_text_name)["step_name"]
+        # TODO:
+        # self.title = PPF.match_format(markdown[0], PPF.format_step_text_name)["step_name"]
 
         self.text = PPF.md_to_html(markdown)
 
@@ -162,57 +163,57 @@ class StepQuiz(TypeStep):
         return f"StepQuiz()"
 
     def parse(self, markdown: list[str]) -> None:
-        if not PPF.check_format(markdown[0], PPF.format_step_number_name, _from_start=True):
-            raise SyntaxError("Step:Number was set incorrectly")
+        if not PPF.check_format(markdown[0], PPF.format_step_quiz_name, _from_start=True):
+            raise SyntaxError("Step:Quiz was set incorrectly")
 
         text, options = [], []
-        status, i, running = "None", 0, True
+        status, line_i, running = "None", 0, True
         # parse for text ------------------------------------------------------
         while running:
-            line = markdown[i]
+            line = markdown[line_i]
 
             if PPF.check_format(line, PPF.format_text_begin, _from_start=True):
                 status = "Text"
                 text.append(PPF.match_format(line, PPF.format_text_begin)["text"])
-                i += 1
-                while i < len(markdown) and status == "Text":
-                    text.append(markdown[i])
-                    if PPF.check_format(markdown[i], PPF.format_text_end, _from_start=True):
+                line_i += 1
+                while line_i < len(markdown) and status == "Text":
+                    text.append(markdown[line_i])
+                    if PPF.check_format(markdown[line_i], PPF.format_text_end, _from_start=True):
                         status = "None"
                         text.pop(-1)
-                    i += 1
+                    line_i += 1
 
                 if status == "Text":
                     raise SyntaxError(f"In {self}: no closure TEXTEND for TEXTBEGIN")
             elif not PPF.check_format(line, PPF.format_quiz_option):
                 text.append(line)
-                i += 1
+                line_i += 1
             else:
                 p_res = PPF.match_format(line, PPF.format_quiz_option)
                 if p_res["letter"] == "A":
                     running = False
                 else:
-                    i += 1
+                    line_i += 1
 
-            if i >= len(markdown):
+            if line_i >= len(markdown):
                 raise SyntaxError(f"In {self}: no AIKEN quiz options given")
 
         # parse for quiz options ----------------------------------------------
         running = True
         while running:
-            line = markdown[i]
+            line = markdown[line_i]
             if PPF.check_format(line, PPF.format_quiz_option):
                 p_res = PPF.match_format(line, PPF.format_quiz_option)
                 options.append([p_res["letter"], [p_res["text"]]])
-                i += 1
-            elif not PPF.check_format(line, PPF.format_quiz_answer) or \
+                line_i += 1
+            elif not PPF.check_format(line, PPF.format_quiz_answer) and \
                     not PPF.check_format(line, PPF.format_quiz_shuffle):
                 options[-1][1].append(line)
-                i += 1
+                line_i += 1
             else:
                 running = False
 
-            if i >= len(markdown):
+            if line_i >= len(markdown):
                 raise SyntaxError(f"In {self}: no ANSWER(s) given")
 
         for i in range(1, len(options)):
@@ -226,14 +227,14 @@ got "{options[i][0]}" instead""")
         do_shuffle = None
         running = True
         while running:
-            line = markdown[i]
+            line = markdown[line_i]
             if not ans and PPF.check_format(line, PPF.format_quiz_answer):
                 ans = set(PPF.match_format(line, PPF.format_quiz_answer)["answer"])
             elif (do_shuffle is None) and PPF.check_format(line, PPF.format_quiz_shuffle):
                 do_shuffle = PPF.match_format(line, PPF.format_quiz_shuffle)["do_shuffle"]
 
-            i += 1
-            if i >= len(markdown):
+            line_i += 1
+            if line_i >= len(markdown):
                 running = False
 
         self.text = PPF.md_to_html(text)

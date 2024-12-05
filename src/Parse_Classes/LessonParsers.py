@@ -42,6 +42,9 @@ class Lesson:
 
         markdown = self.read_file(f_path)
 
+        if not markdown:
+            return
+
         # parse for lesson_name and lesson_id ---------------------------------
         name_token = PPF.search_format_in_text(
             markdown, PPF.format_lesson_name, _amount=1, _from_start=True)
@@ -63,13 +66,13 @@ class Lesson:
             markdown, PPF.format_step_name, _from_line=id_token[0][1] + 1,  _from_start=True)
 
         if len(step_lines) != 0:
-            step_text = markdown[step_lines[-1][1]:]
-            new_step = self.create_step(step_text)
-            self.add_step(new_step)
             for i in range(len(step_lines) - 1):
                 step_text = markdown[step_lines[i][1]: step_lines[i + 1][1]]
                 new_step = self.create_step(step_text)
                 self.add_step(new_step)
+            step_text = markdown[step_lines[-1][1]:]
+            new_step = self.create_step(step_text)
+            self.add_step(new_step)
         elif id_token[0][1] + 1 < len(markdown) - 2:  # if no steps, but lots of lines
             warnings.warn(
                 UserWarning(f"Lesson {self.name} contains lots of excessive lines"),
@@ -84,7 +87,8 @@ class Lesson:
 
     def create_step(self, markdown: list[str]) -> TypeStep:
         Step = self.identify_step(markdown[0])
-        step = Step(markdown)
+        step = Step()
+        step.parse(markdown)
         return step
 
     def add_step(self, step: TypeStep, position: int = -1):

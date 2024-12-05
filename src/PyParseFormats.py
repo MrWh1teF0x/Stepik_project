@@ -27,6 +27,7 @@ class HiddenFormats:
 
     _unexpected = pp.SkipTo(pp.LineEnd(), include=True)("Unexpected_string")
     _del_spaces = pp.Suppress(pp.White())
+    _safe_del_spaces = pp.Optional(_del_spaces)
     _h1 = pp.Keyword("#")
     _h2 = pp.Keyword("##")
     _upper_letter = pp.Char("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -75,11 +76,11 @@ class HiddenFormats:
     f_st_quiz_name = _h2 + pp.Keyword("QUIZ") + _del_spaces + (pp.restOfLine())("step_name")
     # ------------------------------------------------------------------------------------------------------------------
     # format_text_begin
-    f_t_beg = pp.Keyword("TEXTBEGIN") + _del_spaces + (pp.restOfLine())("text")
+    f_t_beg = pp.Keyword("TEXTBEGIN") + _safe_del_spaces + pp.restOfLine()("text")
     # format_text_end
     f_t_end = pp.Keyword("TEXTEND")
     # format_quiz_option
-    f_quiz_opt = _AIKEN_option("letter") + _del_spaces + pp.restOfLine()("text")
+    f_quiz_opt = _AIKEN_option("letter") + _safe_del_spaces + pp.restOfLine()("text")
     # format
 
 
@@ -166,7 +167,8 @@ def check_format(text: str, parse_exp: pp.ParserElement, _from_start: bool = Fal
         except Exception:
             result = False
     else:
-        result = parse_exp.runTests(text, comment=None, printResults=False)[0]
+        result = parse_exp.runTests(text, comment=None, printResults=False)
+        result = result[0] and len(result[1]) > 0
     return result
 
 
@@ -177,7 +179,7 @@ def find_format(text: str, parse_exp: pp.ParserElement) -> tuple:
 
 def match_format(text: str, parse_exp: pp.ParserElement) -> pp.ParseResults:
     match = parse_exp.runTests(text, comment=None, printResults=False)
-    if match[0]:
+    if match[0] and match[1]:
         return match[1][0][1]
 
 # def match_format(text: str, parse_exp):
