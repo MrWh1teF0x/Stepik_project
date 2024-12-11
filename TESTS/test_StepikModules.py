@@ -46,60 +46,218 @@ def test_Lesson_init():
     assert a2.id != a1.id
 
 
-def test_PyParse_check_format():
-    a1_res = format_lesson_id.parseString("lesson = 123")
-    assert a1_res.asList() == ["lesson", "=", "123"]
-    assert a1_res.asDict() == {"lesson_id": "123"}
-    a2_res = format_lesson_id.parseString("lesson=123")
-    assert a2_res.asList() == ["lesson", "=", "123"]
-    assert a2_res.asDict() == {"lesson_id": "123"}
-    b_res = format_lesson_name.parseString("#    Lesson 1      ")
-    assert b_res.asList() == ["#", "Lesson 1      "]
-    assert b_res.asDict() == {"lesson_name": "Lesson 1      "}
-    c_res = format_step_name.parseString("##\t\t\t dq21eoi1 231o231238")
-    assert c_res.asList() == ["##", "dq21eoi1 231o231238"]
-    assert c_res.asDict() == {"step_name": "dq21eoi1 231o231238"}
-    d_res = format_step_name.parseString("## 123")
-    assert d_res.asList() == ["##", "123"]
-    assert d_res.asDict() == {"step_name": "123"}
+def check_format_on_text(text: list[str],
+                         pp_format: pp.ParserElement,
+                         check_array: list[bool],
+                         match_list: None | list = None,
+                         match_dict: None | list[dict] = None,
+                         find_array: None | list[tuple[int, int]] = None):
+    if __do_debug:
+        print("-- check_format_on_text --")
+    for i in range(len(text)):
+        if __do_debug:
+            print(f"line: {(text[i], )}", end="")
+        assert check_array[i] == check_format(text[i], pp_format)
+        if match_list is not None:
+            assert match_list[i] == match_format(text[i], pp_format).asList()
+        if match_dict is not None:
+            assert match_dict[i] == match_format(text[i], pp_format).asDict()
+        if find_array is not None:
+            if find_array[i] == ():
+                assert find_array[i] == find_format(text[i], pp_format)
+            else:
+                assert find_array[i] == find_format(text[i], pp_format)[0][1:]
+        if __do_debug:
+            print(" -- SUCCESS")
 
-    a = format_lesson_id.runTests("lesson = 123", printResults=False)
-    assert a[0]
-    assert a[1][0][1].asList() == ["lesson", "=", "123"]
-    assert a[1][0][1].asDict() == {"lesson_id": "123"}
-    a_1 = format_lesson_name.runTests(
-        "  #   123123123", comment=None, printResults=False
-    )
-    assert a_1[0]
+    if __do_debug:
+        print("-- search_format_in_text --")
+        for i in search_format_in_text(text, pp_format):
+            print(i)
 
-    b = format_lesson_name.runTests(
-        "  #    Lesson 1      ", comment=None, printResults=False
-    )
-    assert b[0]
-    assert b[1][0][1].asList() == ["#", "Lesson 1"]
-    assert b[1][0][1].asDict() == {"lesson_name": "Lesson 1"}
 
-    c = check_format("", format_lesson_id)
-    assert not c
+def test_format_lesson_name():
+    if __do_debug:
+        print()
 
-    match_b = find_format("# lesson 1 \n # 123123123", format_lesson_name)
-    assert match_b[0][0].asList() == ["#", "lesson 1 "]
-    assert match_b[1][0].asList() == ["#", "123123123"]
+    # format_lesson_name
+    a = format_lesson_name.parseString("# 123")
+    assert a.asList() == ["#", "123"]
+    assert a.asDict() == {'lesson_name': '123'}
 
-    match_a = find_format("gibberish", format_lesson_name)
-    assert match_a == ()
+    with pytest.raises(pp.exceptions.ParseException):
+        b = format_lesson_name.parseString("#123 123")
+        if __do_debug:
+            print("wrong parse: " + str([b]))
 
-    text_a = [
-        "# HEADER",
-        "some text",
-        "lesson = 123123123",
-        "awaawdawd",
-        "## Lesson1",
-        "fussaweawefo",
-    ]
-    res_a = search_format_in_text(text_a, format_lesson_id)
-    assert 123123123 == int(res_a[0][0]["lesson_id"])
+    with pytest.raises(pp.exceptions.ParseException):
+        c = format_lesson_name.parseString("## 123")
+        if __do_debug:
+            print("Wrong parse: " + str([c]))
 
+    d = format_lesson_name.parseString("# # 123")
+    assert d.asList() == ["#", "# 123"]
+    assert d.asDict() == {'lesson_name': "# 123"}
+
+    e = format_lesson_name.parseString("#  \r   \t #  Lesson 1      ")
+    assert e.asList() == ["#", "#  Lesson 1      "]
+    assert e.asDict() == {"lesson_name": "#  Lesson 1      "}
+
+    with pytest.raises(pp.exceptions.ParseException):
+        f = format_lesson_name.parseString("### dfoeo dowaa;d")
+        if __do_debug:
+            print("Wrong parse: " + str([f]))
+
+    text = ["# TEXT 123123123  ",
+            "line of text",
+            "##, wrong step name",
+            "#1wrong header",
+            "# not Another step name",
+            "now # is later",
+            "now we use \n 123",
+            "again, but with \n # new header",
+            "   # some spaces before text",
+            "   # ",
+            "#",
+            "## TEXT Step name",
+            "### Normal h3",
+            "   # bad ## line # to ## live   ",
+            ""]
+    check_arr = (True, False, False, False,
+                 True, False, False, False,
+                 True,
+                 True, False, False, False,
+                 True, False)
+    match_lst = (["#", "TEXT 123123123  "], [], [], [],
+                 ["#", "not Another step name"], [], [], [],
+                 ["#", "some spaces before text"],
+                 ["#", ""], [], [], [],
+                 ["#", "bad ## line # to ## live   "], [])
+    match_dct = ({"lesson_name": "TEXT 123123123  "}, dict(), dict(), dict(),
+                 {"lesson_name": "not Another step name"}, dict(), dict(), dict(),
+                 {"lesson_name": "some spaces before text"},
+                 {"lesson_name": ""}, dict(), dict(), dict(),
+                 {"lesson_name": "bad ## line # to ## live   "}, dict())
+    find_arr = ((0, 18), (), (), (),
+                (0, 23),
+                (4, 14), (),
+                (18, 30),
+                (3, 28),
+                (3, 5), (),
+                (1, 17),
+                (2, 13),
+                (3, 32), ())
+
+    check_format_on_text(text, format_lesson_name, check_arr, match_lst, match_dct, find_arr)
+
+
+def test_format_lesson_id():
+    if __do_debug:
+        print()
+
+    a = format_lesson_id.parseString("lesson = 12312")
+    assert a.asList() == ["lesson", "=", 12312]
+    assert a.asDict() == {"lesson_id": 12312}
+
+    b = format_lesson_id.parseString("lesson=20685133")
+    assert b.asList() == ["lesson", "=", 20685133]
+    assert b.asDict() == {"lesson_id": 20685133}
+
+    with pytest.raises(pp.exceptions.ParseException):
+        c = format_lesson_id.parseString(" = 213349")
+        if __do_debug:
+            print("Wrong parse: " + str([c]))
+
+    with pytest.raises(pp.exceptions.ParseException):
+        d = format_lesson_id.parseString("lesson = -19124815")
+        if __do_debug:
+            print("Wrong parse: " + str([d]))
+
+    with pytest.raises(pp.exceptions.ParseException):
+        e = format_lesson_id.parseString("lesson = ")
+        if __do_debug:
+            print("Wrong parse: " + str([e]))
+
+    f = format_lesson_id.parseString(" \n lesson = 0")
+    assert f.asList() == ["lesson", "=", 0]
+    assert f.asDict() == {"lesson_id": 0}
+
+    text = ["# Lesson name",
+            "leson = 123",
+            "",
+            "lesson = 456",
+            "",
+            " lesson = -000 \n lesson = 000",
+            "## TEXT step with lesson = 789",
+            "",
+            "   lesson = 789"]
+    check_arr = (False, False, False,
+                 True, False, False, False, False,
+                 True)
+    match_lst = ([], [], [],
+                 ["lesson", "=", 456], [], [], [], [],
+                 ["lesson", '=', 789])
+    match_dct = (dict(), dict(), dict(),
+                 {"lesson_id": 456}, dict(), dict(), dict(), dict(),
+                 {"lesson_id": 789})
+    find_arr = ((), (), (),
+                (0, 12), (),
+                (17, 29),
+                (18, 30), (),
+                (3, 15))
+
+    check_format_on_text(text, format_lesson_id, check_arr, match_lst, match_dct, find_arr)
+
+
+def test_format_step_name():
+    if __do_debug:
+        print()
+
+    """
+    a = format_lesson_id.parseString("lesson = 12312")
+    assert a.asList() == ["lesson", "=", 12312]
+    assert a.asDict() == {"lesson_id": 12312}
+    
+    with pytest.raises(pp.exceptions.ParseException):
+        c = format_lesson_id.parseString(" = 213349")
+        if __do_debug:
+            print("Wrong parse: " + str([c]))
+    """
+
+    a = format_step_name.parseString("##  \tTEXT#Нет \n после Ashley Jackson")
+    assert a.asList() == ["##", "", "TEXT#Нет \n после Ashley Jackson"]
+    assert a.asDict() == {'type': "", 'step_name': "TEXT#Нет \n после Ashley Jackson"}
+
+    b = format_step_name.parseString("##  \tTEXT this is a stepText")
+    assert b.asList() == ["##", "TEXT", "this is a stepText"]
+    assert b.asDict() == {'type': "TEXT", 'step_name': "this is a stepText"}
+
+    # f*ck python and it's "\t". i give up  >_<
+    #c = format_step_name.parseString("##  \t a \n b \t c \r TEXT \n QUIZ")
+    #assert c.asList() == ["##", "", "a \n b \t c \t TEXT \n QUIZ"]
+    #assert c.asDict() == {'type': "", 'step_name': "a \n b \t c \t TEXT \n QUIZ"}
+
+    c = format_step_name.parseString("##  \t a \n b \f c \r TEXT \n QUIZ")
+    assert c.asList() == ["##", "", "a \n b \f c \r TEXT \n QUIZ"]
+    assert c.asDict() == {'type': "", 'step_name': "a \n b \f c \r TEXT \n QUIZ"}
+
+    with pytest.raises(pp.exceptions.ParseException):
+        d = format_lesson_id.parseString("###     h3, not h2")
+        if __do_debug:
+            print("Wrong parse: " + str([d]))
+
+    e = format_step_name.parseString("## dq21eoi1 231o231238")
+    assert e.asList() == ["##", "", "dq21eoi1 231o231238"]
+    assert e.asDict() == {"type": "", "step_name": "dq21eoi1 231o231238"}
+
+    f = format_step_name.parseString("## 123")
+    assert f.asList() == ["##", "", "123"]
+    assert f.asDict() == {"type": "", "step_name": "123"}
+
+    with pytest.raises(pp.exceptions.ParseException):
+        g = format_step_name.parseString("")
+        if __do_debug:
+            print("Wrong parse: " + str([g]))
 
 
 # search_format_in_text (max_amount = 0)
