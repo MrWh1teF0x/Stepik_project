@@ -175,7 +175,7 @@ def search_format_in_text(
             except Exception:
                 res = ()
         else:
-            res = tuple(parse_exp.scan_string(text[line_i], ))
+            res = tuple(parse_exp.scan_string(text[line_i]))
 
         if res != ():
             for l_res in res:
@@ -190,27 +190,26 @@ def search_format_in_text(
 
 
 def check_format(text: str, parse_exp: pp.ParserElement, _from_start: bool = False) -> bool:
-    if _from_start:
-        try:
-            _ = parse_exp.parseString(text)
-            result = True
-        except Exception:
-            result = False
-    else:
-        result = parse_exp.runTests(text, comment=None, printResults=False)
-        result = result[0] and len(result[1]) > 0
+    try:
+        _ = parse_exp.parse_string(text)
+        result = True
+    except Exception:
+        result = False
     return result
 
 
-def find_format(text: str, parse_exp: pp.ParserElement) -> tuple:
-    match = tuple(parse_exp.scanString(text))
+def find_format(text: str, parse_exp: pp.ParserElement, _from_start: bool = False, _amount: int = 1) -> tuple:
+    # TODO: add _from_start
+    match = tuple(parse_exp.scan_string(text, max_matches=_amount))
     return match
 
 
-def match_format(text: str, parse_exp: pp.ParserElement) -> pp.ParseResults:
-    match = parse_exp.runTests(text, comment=None, printResults=False)
-    if match[0] and match[1]:
-        return match[1][0][1]
+def match_format(text: str, parse_exp: pp.ParserElement, _match_all: bool = False) -> pp.ParseResults:
+    try:
+        match = parse_exp.parseString(text, parse_all=_match_all)
+        return match
+    except Exception:
+        return pp.ParseResults([])
 
 # def match_format(text: str, parse_exp):
 #    pass
