@@ -100,10 +100,6 @@ def test_PyParse_check_format():
     res_a = search_format_in_text(text_a, format_lesson_id)
     assert 123123123 == int(res_a[0][0]["lesson_id"])
 
-    a = "A. `len(s)`"
-    assert check_format(a, format_quiz_option)
-    b = "A."
-    assert check_format(b, format_quiz_option)
 
 
 # search_format_in_text (max_amount = 0)
@@ -155,19 +151,25 @@ def test_Steps_creation():
         print(lesson2.steps)
 
 def test_Steps_formats():
-    print()
-    res = match_format("A. B)", format_quiz_option)
-    print([res])
-    res = match_format("    A. B)", format_quiz_option)
-    print([res])
-    res = match_format("  . B. A) asdasd", format_quiz_option)
-    print([res])
-    res = match_format("ANSWER: A, B", format_quiz_answer)
-    print([res])
-    res = match_format("TRUE", HiddenFormats._bool)
-    print([res])
-    res = match_format("SHUFFLE: TRUE", format_quiz_shuffle)
-    print([res])
+    if __do_debug:
+        print()
+        res = match_format("A. B)", format_quiz_option)
+        print([res])
+        res = match_format("    A. B)", format_quiz_option)
+        print([res])
+        res = match_format("  . B. A) asdasd", format_quiz_option)
+        print([res])
+        res = match_format("ANSWER: A, B", format_quiz_answer)
+        print([res])
+        res = match_format("TRUE", HiddenFormats._bool)
+        print([res])
+        res = match_format("SHUFFLE: TRUE", format_quiz_shuffle)
+        print([res])
+        a = "A. `len(s)`"
+        assert check_format(a, format_quiz_option)
+        b = "A."
+        assert check_format(b, format_quiz_option)
+
 
 def test_Step_Quiz():
     text = ["## QUIZ quiz",
