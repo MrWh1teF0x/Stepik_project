@@ -13,14 +13,21 @@ class TypeStep(ABC):
     position: int = None
 
     def __repr__(self):
-        return f"TypeStep({self.title})"
+        return f"TypeStep('{self.title}')"
 
-    def __pre_parse(self, markdown: list[str]):
-        pass  # TODO: make title and config parsing
+    def _pre_parse(self, markdown: list[str]):
+        self.title = PPF.match_format(markdown[0], PPF.format_step_name)["step_name"]
+        markdown[0] = "## " + self.title
+
+        # TODO: parse for config
 
     @abstractmethod
-    def parse(self, markdown: list[str]) -> None:
+    def _parse(self, markdown: list[str]):
         pass
+
+    def parse(self, markdown: list[str]) -> None:
+        self._pre_parse(markdown)
+        self._parse(markdown)
 
     @abstractmethod
     def body(self) -> dict:
@@ -30,17 +37,9 @@ class TypeStep(ABC):
 @dataclass
 class StepText(TypeStep):
     def __repr__(self):
-        return f"StepText({self.title})"
+        return f"StepText('{self.title}')"
 
-    def parse(self, markdown: list[str]) -> None:
-        if not PPF.check_format(markdown[0], PPF.format_step_text_name):
-            if not PPF.check_format(markdown[0], PPF.format_step_name):
-                raise SyntaxError(
-                    "Step:Text was set or written incorrectly - Impossible ERROR"
-                )
-        # TODO:
-        # self.title = PPF.match_format(markdown[0], PPF.format_step_text_name)["step_name"]
-
+    def _parse(self, markdown: list[str]) -> None:
         self.text = PPF.md_to_html(markdown)
 
         self.body()
@@ -67,12 +66,9 @@ class StepString(TypeStep):
     answer: str = ""
 
     def __repr__(self):
-        return f"StepString({self.title})"
+        return f"StepString('{self.title}')"
 
-    def parse(self, markdown: list[str]) -> None:
-        if not PPF.check_format(markdown[0], PPF.format_step_string_name, _from_start=True):
-            raise SyntaxError("Step:String was set incorrectly")
-
+    def _parse(self, markdown: list[str]) -> None:
         text = []
         for line in markdown:
             if PPF.check_format(line, PPF.format_string_answer, _from_start=True):
@@ -113,12 +109,9 @@ class StepNumber(TypeStep):
     max_error: float = None
 
     def __repr__(self):
-        return f"StepNumber({self.title})"
+        return f"StepNumber('{self.title}')"
 
-    def parse(self, markdown: list[str]) -> None:
-        if not PPF.check_format(markdown[0], PPF.format_step_number_name, _from_start=True):
-            raise SyntaxError("Step:Number was set incorrectly")
-
+    def _parse(self, markdown: list[str]) -> None:
         text = []
         for line in markdown:
             if PPF.check_format(line, PPF.format_number_answer, _from_start=True):
@@ -161,12 +154,9 @@ class StepQuiz(TypeStep):
     is_multiple_choice: bool = True
 
     def __repr__(self):
-        return f"StepQuiz()"
+        return f"StepQuiz('{self.title}')"
 
-    def parse(self, markdown: list[str]) -> None:
-        if not PPF.check_format(markdown[0], PPF.format_step_quiz_name, _from_start=True):
-            raise SyntaxError("Step:Quiz was set incorrectly")
-
+    def _parse(self, markdown: list[str]) -> None:
         text, options = [], []
         status, line_i, running = "None", 0, True
         # parse for text ------------------------------------------------------
@@ -284,7 +274,7 @@ class StepTask(TypeStep):
     execution_memory_limit: int = 256
     test_cases: list[TaskTest] = field(default_factory=list)
 
-    def parse(self, markdown: list[str]) -> None:
+    def __parse(self, markdown: list[str]) -> None:
         pass
 
     def body(self) -> dict:
