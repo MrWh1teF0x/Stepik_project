@@ -25,19 +25,49 @@ class HiddenFormats:
                 tok_lst[i] = None
         return tok_lst
 
+    @staticmethod
+    def _to_int(toks: pp.ParseResults):
+        tok_list = toks.asList()
+        for i in range(len(tok_list)):
+            if tok_list[i] == HiddenFormats._int_format:
+                tok_list[i] = int(tok_list[i])
+        return tok_list
+
+    @staticmethod
+    def _return_emtpy_string(toks: pp.ParseResults):
+        tok_list = toks.asList()
+        tok_list.append("")
+        return tok_list
+
     _unexpected = pp.SkipTo(pp.LineEnd(), include=True)("Unexpected_string")
     _del_spaces = pp.Suppress(pp.White())
     _safe_del_spaces = pp.Optional(_del_spaces)
-    _h1 = pp.Keyword("#")
-    _h2 = pp.Keyword("##")
+    _rest_of_token = pp.SkipTo(pp.StringEnd(), include=True)
+
     _upper_letter = pp.Char("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-    _float_number = pp.Combine(pp.Optional("-") + pp.Word(pp.nums) + "," + pp.Word(pp.nums))
-    _AIKEN_option = pp.Combine(_upper_letter + pp.Suppress(pp.Char(".)")))
-    _ans = pp.Literal("ANSWER:")
-    _shuff = pp.Literal("SHUFFLE:")
+    _pos_int_format = pp.Word(pp.nums)
+    _int_format = pp.Combine(pp.Optional("-") + _pos_int_format)
+    _pos_integer = _pos_int_format.copy().setParseAction(_to_int)
+    _integer = _int_format.copy().setParseAction(_to_int)
+    _float_number = pp.Combine(_int_format + "," + _pos_int_format)
     _true = pp.Keyword("TRUE", caseless=True)
     _false = pp.Keyword("FALSE", caseless=True)
     _bool = pp.Or((_true, _false)).setParseAction(_to_bool)
+
+    _t_default = pp.Empty().setParseAction(_return_emtpy_string)  # TODO: fix, so == to other types
+    _t_text = pp.Keyword("TEXT")
+    _t_string = pp.Keyword("STRING")
+    _t_number = pp.Keyword("NUMBER")
+    _t_quiz = pp.Keyword("QUIZ")
+
+    _st_type = pp.Or((_t_text, _t_string, _t_number, _t_quiz))
+
+    _AIKEN_option = pp.Combine(_upper_letter + pp.Suppress(pp.Char(".)")))
+    _ans = pp.Literal("ANSWER:")
+    _shuff = pp.Literal("SHUFFLE:")
+    _h1 = pp.Keyword("#")
+    _h2 = pp.Keyword("##")
+
     # ==================================================================================================================
     # format_string_answer     -> [("ANSWER:", *line_of_text*), {'answer': *line_of_text*}]
     f_str_ans = _ans + _del_spaces + (pp.restOfLine())("answer")
@@ -45,7 +75,7 @@ class HiddenFormats:
     # format_number_answer     -> [("ANSWER:", *number*, *number*), {'answer': *number*, 'error': *number* or None})]
     f_num_ans = _ans + _float_number("answer") + pp.Optional(pp.Suppress("±") + _float_number)("adm_err")
 
-    # format_quiz_answer       -> [("ANSWER:", *arr_of_letters*), {"answer': *arr_of_letters}]
+    # format_quiz_answer
     f_quiz_ans = _ans + (_upper_letter + pp.ZeroOrMore(pp.Suppress(",") + _upper_letter))("answer")
 
     # format_quiz_shuffle
@@ -55,7 +85,7 @@ class HiddenFormats:
     f_regexp = pp.Literal("REGEXP:") + _del_spaces + (pp.restOfLine())("reg_exp")
 
     # format_lesson_id         -> [("lesson", "=", *number*) {'lesson': *number*}]
-    f_les_id = pp.Literal("lesson") + "=" + pp.Word(pp.nums)("lesson_id")
+    f_les_id = pp.Literal("lesson") + "=" + _pos_integer("lesson_id")
     # ------------------------------------------------------------------------------------------------------------------
     # format_lesson_name       -> [("#", *line_of_text*), {'lesson_name': *line_of_text*}]
     f_les_name = _h1 + _del_spaces + (pp.restOfLine())("lesson_name")
@@ -67,13 +97,13 @@ class HiddenFormats:
     f_st_t_name = _h2 + pp.Keyword("TEXT") + _del_spaces + (pp.restOfLine())("step_name")
 
     # format_step_string_name  -> [("##", "STRING", *line_of_text*), {step_name: *line_of_text*}]
-    f_st_str_name = _h2 + pp.Keyword("STRING") + _del_spaces + (pp.restOfLine())("step_name")
+    f_st_str_name = _h2 + _t_string("type") + _del_spaces + (pp.restOfLine())("step_name")
 
     # format_step_number_name  -> [("##", "NUMBER", *line_of_text*), {step_name: *line_of_text*}]
-    f_st_num_name = _h2 + pp.Keyword("NUMBER") + _del_spaces + (pp.restOfLine())("step_name")
+    f_st_num_name = _h2 + _t_number("type") + _del_spaces + (pp.restOfLine())("step_name")
 
     # format_step_quiz_name    -> [("##", "QUIZ", *line_of_text*), {step_name: *line_of_text*}]
-    f_st_quiz_name = _h2 + pp.Keyword("QUIZ") + _del_spaces + (pp.restOfLine())("step_name")
+    f_st_quiz_name = _h2 + _t_quiz("type") + _del_spaces + (pp.restOfLine())("step_name")
     # ------------------------------------------------------------------------------------------------------------------
     # format_text_begin
     f_t_beg = pp.Keyword("TEXTBEGIN") + _safe_del_spaces + pp.restOfLine()("text")
