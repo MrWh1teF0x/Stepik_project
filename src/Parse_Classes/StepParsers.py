@@ -501,12 +501,14 @@ class StepTable(TypeStep):
             }
         }
 
+default_step_format = StepText
 
 STEP_MAP = {
-    PPF.format_step_text_name: StepText,
-    PPF.format_step_string_name: StepString,
-    PPF.format_step_number_name: StepNumber,
-    PPF.format_step_quiz_name: StepQuiz,
+    "": default_step_format,
+    "TEXT": StepText,
+    "STRING": StepString,
+    "NUMBER": StepNumber,
+    "QUIZ": StepQuiz,
 }
 
-default_step_format = StepText
+

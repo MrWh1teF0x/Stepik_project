@@ -4,6 +4,8 @@ import markdown as md
 # WARNING: pyparsing can cause errors with encodings (unicode) ----------------------------------------------------- !!!
 import re
 
+from pyparsing import ParserElement, Regex
+
 
 def md_to_html(md_text: list[str] | str):
     if isinstance(md_text, list):
@@ -91,10 +93,8 @@ class HiddenFormats:
     f_les_name = _h1 + _del_spaces + (pp.restOfLine())("lesson_name")
 
     # format_step_name         -> [("##", *line_of_text*), {'step_name': *line_of_text*}]
-    f_st_name = _h2 + _del_spaces + (pp.restOfLine())("step_name")
-
-    # format_step_text_name    -> [("##", "TEXT", *line_of_text*), {'step_name': *line_of_text*}]
-    f_st_t_name = _h2 + pp.Keyword("TEXT") + _del_spaces + (pp.restOfLine())("step_name")
+    f_st_name = _h2 + _del_spaces + pp.Or([_st_type("type") + _del_spaces, _t_default("type")])
+    f_st_name = f_st_name + _rest_of_token("step_name")
 
     # format_step_string_name  -> [("##", "STRING", *line_of_text*), {step_name: *line_of_text*}]
     f_st_str_name = _h2 + _t_string("type") + _del_spaces + (pp.restOfLine())("step_name")
@@ -115,30 +115,43 @@ class HiddenFormats:
 
 
 format_text_begin = HiddenFormats.f_t_beg
-# TODO: add this to all format_*
-'''**]==parse==>** [ ("TEXTBEGIN", *line_of_text*), {text: *line_of_text*} ]'''
+''' After parsing: \n
+ParseResults( [ "TEXTBEGIN", *line_of_text* ], { 'text': *line_of_text* }, ) '''
 format_text_end = HiddenFormats.f_t_end
-'''**]==parse==>** [ ("TEXTEND"), {} ]'''
+''' After parsing: \n
+ParseResults( [ "TEXTEND" ], {}, ) '''
 format_quiz_option = HiddenFormats.f_quiz_opt
-'''**]==parse==>** 
-[ (*AIKEN_option*, *line_of_text*), {'letter': *AIKEN_option*, 'text': *line_of_text*} ]'''
+'''After parsing: \n
+ParseResults( [ *AIKEN_option*, *line_of_text* ],
+{ 'letter': *AIKEN_option*, 'text': *line_of_text* }, ) '''
 
 format_string_answer = HiddenFormats.f_str_ans
-'''**]==parse==>** [ ("ANSWER:", *line_of_text*), {'answer': *line_of_text*} ]'''
+'''After parsing: \n
+ParseResults( [ "ANSWER:", *line_of_text* ], { 'answer': *line_of_text* } )'''
 format_reg_exp = HiddenFormats.f_regexp
+'''After parsing: \n
+ParseResults( [ "REGEXP:", *line_of_text* ], { 'reg_exp': *line_of_text* } )'''
 format_number_answer = HiddenFormats.f_num_ans
+'''After parsing: \n
+ParseResults( [ "ANSWER:", *float_number_1*, *float_number2* ],
+{ 'answer': *float_number1*, 'adm_err': *float_number_2* } )'''
 format_quiz_answer = HiddenFormats.f_quiz_ans
-'''**]==parse==>** [ ("ANSWER:", *arr_of_letters*), {'answer': *arr_of_letters*} ]'''
+'''After parsing: \n
+ParseResults( [ "ANSWER:", *arr_of_letters* ], { 'answer': *arr_of_letters* } )'''
 format_quiz_shuffle = HiddenFormats.f_quiz_shuff
-'''**]==parse==>** [ ("SHUFFLE:", *bool*), {'do_shuffle': *bool*} ]'''
+'''After parsing: \n
+ParseResults( [ "SHUFFLE:", *bool* ], { 'do_shuffle': *bool* } )'''
 format_lesson_id = HiddenFormats.f_les_id
+'''After parsing: \n
+ParseResults( [ "lesson", "=", *pos_integer* ], { 'lesson_id': *pos_integer* } )'''
 
 format_lesson_name = HiddenFormats.f_les_name
+'''After parsing: \n
+ParseResults( [ "#", *line_of_text* ], { 'lesson_name': *line_of_text* } )'''
 format_step_name = HiddenFormats.f_st_name
-format_step_text_name = HiddenFormats.f_st_t_name
-format_step_string_name = HiddenFormats.f_st_str_name
-format_step_number_name = HiddenFormats.f_st_num_name
-format_step_quiz_name = HiddenFormats.f_st_quiz_name
+'''After parsing: \n
+ParseResults( [ "##", *step_type*, *line_of_text* ], 
+{ 'type': *step_type*, 'step_name': *line_of_text* } )'''
 
 
 def search_format_in_text(

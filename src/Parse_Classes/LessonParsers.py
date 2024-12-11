@@ -80,10 +80,13 @@ class Lesson:
 
     @staticmethod
     def identify_step(header_line: str):
-        for step_format, step_type in STEP_MAP.items():
-            if PPF.check_format(header_line, step_format):
-                return step_type
-        return default_step_format
+        step_type = PPF.match_format(header_line, PPF.format_step_name)
+
+        if not step_type.asList():
+            warnings.warn(f"In Lesson::class: header_line is incorrect")
+            step_type = {"type": ""}
+
+        return STEP_MAP[step_type["type"]]
 
     def create_step(self, markdown: list[str]) -> TypeStep:
         Step = self.identify_step(markdown[0])
