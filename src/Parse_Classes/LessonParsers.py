@@ -21,14 +21,14 @@ class Lesson:
         self.f_path = file_path
 
     @staticmethod
-    def read_file(file_path: str) -> list[str]:
+    def read_file(file_path: str) -> list[str]:  # TODO: show default error messages, don't do your own
         try:
             text_file = open(file_path, "r+", encoding="UTF-8").read().splitlines()
             return text_file
         except FileNotFoundError or FileExistsError:
-            warnings.warn(UserWarning("File not found or doesn't exist"), stacklevel=2)
+            warnings.warn(Warning("File not found or doesn't exist"), stacklevel=2)
         except Exception:
-            warnings.warn(UserWarning("Unknown Error in Lesson.read_file()"), stacklevel=2)
+            warnings.warn(Warning("Unknown Error in Lesson.read_file()"), stacklevel=2)
         return []
 
     def parse(self, f_path: str = ""):
@@ -36,7 +36,7 @@ class Lesson:
         # check if there is something to parse ------------------------------
         if f_path == "":
             if self.f_path is None:  # file wasn't loaded
-                warnings.warn(UserWarning("Nothing to parse"), stacklevel=2)
+                warnings.warn(Warning("Nothing to parse"), stacklevel=2)
                 return
             f_path = self.f_path
 
@@ -49,7 +49,7 @@ class Lesson:
         name_token = PPF.search_format_in_text(
             markdown, PPF.format_lesson_name, _amount=1, _from_start=True)
         if not name_token:
-            warnings.warn(UserWarning("Lesson name is incorrect"), stacklevel=2)
+            warnings.warn(Warning("Lesson name is incorrect"), stacklevel=2)
             return
         self.name = name_token[0][0]["lesson_name"]
 
@@ -75,7 +75,7 @@ class Lesson:
             self.add_step(new_step)
         elif id_token[0][1] + 1 < len(markdown) - 2:  # if no steps, but lots of lines
             warnings.warn(
-                UserWarning(f"Lesson {self.name} contains lots of excessive lines"),
+                f"Lesson('{self.name}') contains lots of excessive lines", Warning,
                 stacklevel=2)
 
     @staticmethod

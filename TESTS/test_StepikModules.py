@@ -9,12 +9,12 @@ __do_debug = True
 def test_Lesson_init():
     a1 = Lesson()
     # wrong calls ----------------------------------------------------------------
-    with pytest.warns(UserWarning):
+    with pytest.warns(Warning):
         a1_file = a1.read_file(r"..\files\sadmple_1.md")
     assert a1_file == []
-    with pytest.warns(UserWarning):
+    with pytest.warns(Warning):
         a1_file = a1.read_file(r"D:\.md")
-    with pytest.warns(UserWarning):
+    with pytest.warns(Warning):
         a1_file = a1.read_file(r"")
     assert a1_file == []
     assert a1.f_path is None
@@ -115,7 +115,7 @@ def test_Lesson_parse_id_and_name():
     a3 = Lesson(r"..\files\sample_1.md")
     a4 = Lesson()
 
-    with pytest.warns(UserWarning):
+    with pytest.warns(Warning):
         a1.parse()
     assert a1.name == ""
     assert a1.id == -1
@@ -128,7 +128,7 @@ def test_Lesson_parse_id_and_name():
     assert a3.name == "read, readline, readlines"
     assert a3.id == 496523
 
-    with pytest.warns(UserWarning):
+    with pytest.warns(Warning):
         a4.parse()
     assert a4.name == ""
     assert a4.id == -1
