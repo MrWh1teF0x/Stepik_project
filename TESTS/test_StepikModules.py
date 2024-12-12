@@ -213,17 +213,6 @@ def test_format_step_name():
     if __do_debug:
         print()
 
-    """
-    a = format_lesson_id.parseString("lesson = 12312")
-    assert a.asList() == ["lesson", "=", 12312]
-    assert a.asDict() == {"lesson_id": 12312}
-    
-    with pytest.raises(pp.exceptions.ParseException):
-        c = format_lesson_id.parseString(" = 213349")
-        if __do_debug:
-            print("Wrong parse: " + str([c]))
-    """
-
     a = format_step_name.parseString("##  \tTEXT#Нет \n после Ashley Jackson")
     assert a.asList() == ["##", "", "TEXT#Нет \n после Ashley Jackson"]
     assert a.asDict() == {'type': "", 'step_name': "TEXT#Нет \n после Ashley Jackson"}
@@ -259,6 +248,49 @@ def test_format_step_name():
         if __do_debug:
             print("Wrong parse: " + str([g]))
 
+def test_number_answer_format():
+    if __do_debug:
+        print()
+    """
+    a = format_lesson_id.parseString("lesson = 12312")
+    assert a.asList() == ["lesson", "=", 12312]
+    assert a.asDict() == {"lesson_id": 12312}
+
+    with pytest.raises(pp.exceptions.ParseException):
+        c = format_lesson_id.parseString(" = 213349")
+        if __do_debug:
+            print("Wrong parse: " + str([c]))
+    """
+
+    a = format_number_answer.parseString("ANSWER: 123")
+    assert a.asList() == ["ANSWER:", "123"]
+    assert a.asDict() == {"answer": "123"}
+
+    b = format_number_answer.parseString("ANSWER: 123.123")
+    assert b.asList() == ["ANSWER:", "123.123"]
+    assert b.asDict() == {"answer": "123.123"}
+
+    with pytest.raises(pp.exceptions.ParseException):
+        c = format_number_answer.parseString("ANSWER 123.123")
+        if __do_debug:
+            print("Wrong parse: " + str([c]))
+
+    d = format_number_answer.parseString("ANSWER: 123±657")
+    assert d.asList() == ["ANSWER:", "123", "657"]
+    assert d.asDict() == {"answer": "123", "adm_err": "657"}
+
+    e = format_number_answer.parseString("ANSWER: 123.567±9.11")
+    assert e.asList() == ["ANSWER:", "123.567", "9.11"]
+    assert e.asDict() == {"answer": "123.567", "adm_err": "9.11"}
+
+    f = format_number_answer.parseString("ANSWER: -152±28.2")
+    assert f.asList() == ["ANSWER:", "-152", "28.2"]
+    assert f.asDict() == {"answer": "-152", "adm_err": "28.2"}
+
+    with pytest.raises(pp.exceptions.ParseException):
+        g = format_number_answer.parseString("ANSWER: -59±-21243.1", parse_all=True)
+        if __do_debug:
+            print("Wrong parse: " + str([g]))
 
 # search_format_in_text (max_amount = 0)
 

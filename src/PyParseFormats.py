@@ -51,7 +51,8 @@ class HiddenFormats:
     _int_format = pp.Combine(pp.Optional("-") + _pos_int_format)
     _pos_integer = _pos_int_format.copy().setParseAction(_to_int)
     _integer = _int_format.copy().setParseAction(_to_int)
-    _float_number = pp.Combine(_int_format + "." + _pos_int_format)
+    _pos_float_number = pp.Combine(_pos_int_format + pp.Optional("." + _pos_int_format))
+    _float_number = pp.Combine(_int_format + pp.Optional("." + _pos_int_format))
     _true = pp.Keyword("TRUE", caseless=True)
     _false = pp.Keyword("FALSE", caseless=True)
     _bool = pp.Or((_true, _false)).setParseAction(_to_bool)
@@ -75,7 +76,7 @@ class HiddenFormats:
     f_str_ans = _ans + _del_spaces + (pp.restOfLine())("answer")
 
     # format_number_answer     -> [("ANSWER:", *number*, *number*), {'answer': *number*, 'error': *number* or None})]
-    f_num_ans = _ans + _float_number("answer") + pp.Optional(pp.Suppress("±") + _float_number("adm_err"))
+    f_num_ans = _ans + _float_number("answer") + pp.Optional(pp.Suppress("±") + _pos_float_number("adm_err"))
 
     # format_quiz_answer
     f_quiz_ans = _ans + (_upper_letter + pp.ZeroOrMore(pp.Suppress(",") + _upper_letter))("answer")
@@ -202,7 +203,7 @@ def search_format_in_text(
     return ans
 
 
-def check_format(text: str, parse_exp: pp.ParserElement, _from_start: bool = False) -> bool:
+def check_format(text: str, parse_exp: pp.ParserElement, _match_all: bool = True) -> bool:
     try:
         _ = parse_exp.parse_string(text)
         result = True
