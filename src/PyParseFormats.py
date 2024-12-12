@@ -51,7 +51,7 @@ class HiddenFormats:
     _int_format = pp.Combine(pp.Optional("-") + _pos_int_format)
     _pos_integer = _pos_int_format.copy().setParseAction(_to_int)
     _integer = _int_format.copy().setParseAction(_to_int)
-    _float_number = pp.Combine(_int_format + "," + _pos_int_format)
+    _float_number = pp.Combine(_int_format + "." + _pos_int_format)
     _true = pp.Keyword("TRUE", caseless=True)
     _false = pp.Keyword("FALSE", caseless=True)
     _bool = pp.Or((_true, _false)).setParseAction(_to_bool)

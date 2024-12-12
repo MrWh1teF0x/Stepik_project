@@ -308,6 +308,14 @@ def test_Steps_creation():
         print(lesson2.f_path)
         print(lesson2.steps)
 
+    lesson3 = Lesson(r"..\files\sample_2.md")
+    lesson3.parse()
+    assert lesson3.name == "read, readline, readlines"
+    assert lesson3.id == 496523
+    if __do_debug:
+        print(lesson3.f_path)
+        print(lesson3.steps)
+
 def test_Steps_formats():
     if __do_debug:
         print()
