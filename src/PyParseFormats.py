@@ -75,7 +75,7 @@ class HiddenFormats:
     f_str_ans = _ans + _del_spaces + (pp.restOfLine())("answer")
 
     # format_number_answer     -> [("ANSWER:", *number*, *number*), {'answer': *number*, 'error': *number* or None})]
-    f_num_ans = _ans + _float_number("answer") + pp.Optional(pp.Suppress("±") + _float_number)("adm_err")
+    f_num_ans = _ans + _float_number("answer") + pp.Optional(pp.Suppress("±") + _float_number("adm_err"))
 
     # format_quiz_answer
     f_quiz_ans = _ans + (_upper_letter + pp.ZeroOrMore(pp.Suppress(",") + _upper_letter))("answer")
