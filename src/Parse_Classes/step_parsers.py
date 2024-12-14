@@ -1,7 +1,8 @@
-from dataclasses import field, dataclass
-import src.parse_classes.pyparse_formats as PPF
-from abc import ABC, abstractmethod
 import warnings
+import src.parse_classes.pyparse_formats as PPF
+
+from dataclasses import field, dataclass
+from abc import ABC, abstractmethod
 
 
 @dataclass

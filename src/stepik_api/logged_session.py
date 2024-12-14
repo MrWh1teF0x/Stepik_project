@@ -4,7 +4,6 @@ import pathlib
 import logging
 import pathlib
 import yaml
-from enum import Enum
 
 path = pathlib.Path(__file__).parent
 

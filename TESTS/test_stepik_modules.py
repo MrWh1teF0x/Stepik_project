@@ -1,4 +1,5 @@
 import pytest
+
 from src.parse_classes.lesson_parsers import Lesson
 from src.parse_classes.pyparse_formats import *
 

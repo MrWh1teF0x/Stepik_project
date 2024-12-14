@@ -1,5 +1,6 @@
 import click
 import yaml
+
 from src.parse_classes.lesson_parsers import Lesson
 from src.parse_classes.step_parsers import *
 from src.stepik_api.online_tokens import *
