@@ -1,5 +1,5 @@
 from dataclasses import field, dataclass
-import src.pyparse_formats as PPF
+import src.parse_classes.pyparse_formats as PPF
 from abc import ABC, abstractmethod
 import warnings
 

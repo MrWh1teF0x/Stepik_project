@@ -1,6 +1,6 @@
 import pytest
 from src.parse_classes.lesson_parsers import Lesson
-from src.pyparse_formats import *
+from src.parse_classes.pyparse_formats import *
 
 __do_debug = True
 

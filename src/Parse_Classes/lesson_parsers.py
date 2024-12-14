@@ -1,6 +1,6 @@
 import warnings
 from src.parse_classes.step_parsers import *
-import src.pyparse_formats as PPF
+import src.parse_classes.pyparse_formats as PPF
 
 
 class Lesson:
