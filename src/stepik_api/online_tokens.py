@@ -1,7 +1,7 @@
 import json
 
 from dataclasses import dataclass, field
-from src.stepik_api.types_of_step import *
+from src.parse_classes.step_parsers import *
 from src.stepik_api.logged_session import LoggedSession as Session
 
 

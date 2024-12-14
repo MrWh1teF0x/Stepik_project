@@ -2,7 +2,7 @@ import pytest
 
 from time import sleep
 from src.stepik_api.online_tokens import *
-from src.stepik_api.types_of_step import *
+from src.parse_classes.step_parsers import *
 from src.stepik_api.logged_session import init_secret_fields, setup_logger
 
 setup_logger(1, 1)
@@ -18,8 +18,20 @@ STEP_IDS = [
     6203087,
     6203240,
     6203784,
+    6428822,
     6278724,
 ]
+
+
+def wait_ready(step: OnlineStep):
+    info = step.info()
+    while True:
+        if info["steps"][0]["status"] == "ready":
+            break
+        sleep(1)
+        info = step.info()
+
+    return info
 
 
 def test_get_steps_ids():
@@ -44,7 +56,7 @@ def test_StepText():
     step_text_2 = OnlineStep(id=lesson.get_steps_ids()[position])
     step_text_3 = OnlineStep(id=step_text.id)
 
-    assert step_text.info() == step_text_2.info() == step_text_3.info()
+    assert wait_ready(step_text) == step_text_2.info() == step_text_3.info()
 
     lesson.delete_step(position + 1)
 
@@ -63,10 +75,10 @@ def test_StepQuiz():
             position=position,
             cost=5,
             answers=[
-                Answer(text="3", is_correct=False),
-                Answer(text="8", is_correct=True),
-                Answer(text="1", is_correct=False),
-                Answer(text="7", is_correct=False),
+                ("3", False),
+                ("8", True),
+                ("1", False),
+                ("7", False),
             ],
             is_multiple_choice=False,
         )
@@ -76,7 +88,7 @@ def test_StepQuiz():
     step_quiz_2 = OnlineStep(id=lesson.get_steps_ids()[position])
     step_quiz_3 = OnlineStep(id=step_quiz.id)
 
-    assert step_quiz.info() == step_quiz_2.info() == step_quiz_3.info()
+    assert wait_ready(step_quiz) == step_quiz_2.info() == step_quiz_3.info()
 
     lesson.delete_step(position + 1)
 
@@ -102,7 +114,7 @@ def test_StepNumber():
     step_number_2 = OnlineStep(id=lesson.get_steps_ids()[position])
     step_number_3 = OnlineStep(id=step_number.id)
 
-    assert step_number.info() == step_number_2.info() == step_number_3.info()
+    assert wait_ready(step_number) == step_number_2.info() == step_number_3.info()
 
     lesson.delete_step(position + 1)
 
@@ -129,7 +141,7 @@ def test_StepString():
     step_string_2 = OnlineStep(id=lesson.get_steps_ids()[position])
     step_string_3 = OnlineStep(id=step_string.id)
 
-    assert step_string.info() == step_string_2.info() == step_string_3.info()
+    assert wait_ready(step_string) == step_string_2.info() == step_string_3.info()
 
     lesson.delete_step(position + 1)
 
@@ -162,14 +174,14 @@ def test_StepTask():
     step_task_3 = OnlineStep(id=step_task.id)
 
     # Здесь нужно несколько раз делать GET запрос, так как Stepik'у нужно некоторое время, чтобы добавить задачу на программирование
-    info = step_task.info()
-    while True:
-        if info["steps"][0]["status"] == "ready":
-            break
-        sleep(1)
-        info = step_task.info()
+    # info = step_task.info()
+    # while True:
+    #     if info["steps"][0]["status"] == "ready":
+    #         break
+    #     sleep(1)
+    #     info = step_task.info()
 
-    assert step_task.info() == step_task_2.info() == step_task_3.info()
+    assert wait_ready(step_task) == step_task_2.info() == step_task_3.info()
 
     lesson.delete_step(position + 1)
 
@@ -195,7 +207,7 @@ def test_StepSort():
     step_sort_2 = OnlineStep(id=lesson.get_steps_ids()[position])
     step_sort_3 = OnlineStep(id=step_sort.id)
 
-    assert step_sort.info() == step_sort_2.info() == step_sort_3.info()
+    assert wait_ready(step_sort) == step_sort_2.info() == step_sort_3.info()
 
     lesson.delete_step(position + 1)
 
@@ -226,7 +238,7 @@ def test_StepMatch():
     step_match_2 = OnlineStep(id=lesson.get_steps_ids()[position])
     step_match_3 = OnlineStep(id=step_match.id)
 
-    assert step_match.info() == step_match_2.info() == step_match_3.info()
+    assert wait_ready(step_match) == step_match_2.info() == step_match_3.info()
 
     lesson.delete_step(position + 1)
 
@@ -262,7 +274,7 @@ def test_StepFill():
     step_fill_2 = OnlineStep(id=lesson.get_steps_ids()[position])
     step_fill_3 = OnlineStep(id=step_fill.id)
 
-    assert step_fill.info() == step_fill_2.info() == step_fill_3.info()
+    assert wait_ready(step_fill) == step_fill_2.info() == step_fill_3.info()
 
     lesson.delete_step(position + 1)
 
@@ -297,7 +309,7 @@ def test_StepTable():
     step_table_2 = OnlineStep(id=lesson.get_steps_ids()[position])
     step_table_3 = OnlineStep(id=step_table.id)
 
-    assert step_table.info() == step_table_2.info() == step_table_3.info()
+    assert wait_ready(step_table) == step_table_2.info() == step_table_3.info()
 
     lesson.delete_step(position + 1)
 

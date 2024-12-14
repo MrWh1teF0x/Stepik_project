@@ -7,7 +7,7 @@ from src.parse_classes.step_parsers import *
 class Lesson:
     id: int = -1
     name: str = ""
-    steps: list[TypeStep] = field(default_factory=list[TypeStep])
+    steps: list[StepType] = field(default_factory=list[StepType])
     f_path: str | None = None
 
     def __init__(self, file_path: str | None = None):
@@ -98,13 +98,13 @@ class Lesson:
 
         return STEP_MAP[step_type["type"]]
 
-    def create_step(self, markdown: list[str]) -> TypeStep:
+    def create_step(self, markdown: list[str]) -> StepType:
         Step = self.identify_step(markdown[0])
         step = Step()
         step.parse(markdown)
         return step
 
-    def add_step(self, step: TypeStep, position: int = -1):
+    def add_step(self, step: StepType, position: int = -1):
         if position == -1:
             self.steps.append(step)
         else:

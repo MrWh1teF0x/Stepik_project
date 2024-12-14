@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 
 
 @dataclass
-class TypeStep(ABC):
+class StepType(ABC):
     title: str = ""
     text: str = ""
     cost: int = 0
@@ -14,7 +14,7 @@ class TypeStep(ABC):
     position: int = None
 
     def __repr__(self):
-        return f"TypeStep('{self.title}')"
+        return f"StepType('{self.title}')"
 
     def _pre_parse(self, markdown: list[str]):
         self.title = PPF.match_format(markdown[0], PPF.format_step_name)["step_name"]
@@ -36,7 +36,7 @@ class TypeStep(ABC):
 
 
 @dataclass
-class StepText(TypeStep):
+class StepText(StepType):
     def __repr__(self):
         return f"StepText('{self.title}')"
 
@@ -60,7 +60,7 @@ class StepText(TypeStep):
 
 
 @dataclass
-class StepString(TypeStep):
+class StepString(StepType):
     match_substring: bool = False
     case_sensitive: bool = False
     use_re: bool = False
@@ -105,9 +105,9 @@ class StepString(TypeStep):
 
 
 @dataclass
-class StepNumber(TypeStep):
+class StepNumber(StepType):
     answer: float = None
-    max_error: float = None
+    max_error: float = 0
 
     def __repr__(self):
         return f"StepNumber('{self.title}')"
@@ -149,7 +149,7 @@ class StepNumber(TypeStep):
 
 
 @dataclass
-class StepQuiz(TypeStep):
+class StepQuiz(StepType):
     answers: list[tuple[str, bool]] = field(default_factory=list)
     do_shuffle: bool = True
     is_multiple_choice: bool = True
@@ -278,14 +278,15 @@ class TaskTest:
     output: str = ""
 
 
-class StepTask(TypeStep):
+@dataclass
+class StepTask(StepType):
     code: str = ""
     samples_count: int = 1
     execution_time_limit: int = 5
     execution_memory_limit: int = 256
     test_cases: list[TaskTest] = field(default_factory=list)
 
-    def __parse(self, markdown: list[str]) -> None:
+    def _parse(self, markdown: list[str]) -> None:
         pass
 
     def body(self) -> dict:
@@ -319,10 +320,10 @@ class StepTask(TypeStep):
 
 
 @dataclass
-class StepSort(TypeStep):
+class StepSort(StepType):
     sorted_answers: list[str] = field(default_factory=list)
 
-    def parse(self, markdown: list[str]) -> None:
+    def _parse(self, markdown: list[str]) -> None:
         pass
 
     def body(self) -> dict:
@@ -349,11 +350,11 @@ class MatchPair:
 
 
 @dataclass
-class StepMatch(TypeStep):
+class StepMatch(StepType):
     preserve_firsts_order: bool = True
     pairs: list[MatchPair] = field(default_factory=list)
 
-    def parse(self, markdown: list[str]) -> None:
+    def _parse(self, markdown: list[str]) -> None:
         pass
 
     def body(self) -> dict:
@@ -402,6 +403,9 @@ class Answer:
 class BlankInput(BlankType):
     answers: list[Answer] = field(default_factory=list)
 
+    def _parse(self, markdown: list[str]) -> None:
+        pass
+
     def body(self) -> dict:
         return {
             "type": "input",
@@ -417,6 +421,9 @@ class BlankInput(BlankType):
 class BlankSelect(BlankType):
     answers: list[Answer] = field(default_factory=list)
 
+    def _parse(self, markdown: list[str]) -> None:
+        pass
+
     def body(self) -> dict:
         return {
             "type": "select",
@@ -429,13 +436,13 @@ class BlankSelect(BlankType):
 
 
 @dataclass
-class StepFill(TypeStep):
+class StepFill(StepType):
     is_case_sensitive: bool = False
     is_detailed_feedback: bool = False
     is_partially_correct: bool = False
     components: list[BlankType] = field(default_factory=list)
 
-    def parse(self, markdown: list[str]) -> None:
+    def _parse(self, markdown: list[str]) -> None:
         pass
 
     def body(self) -> dict:
@@ -477,14 +484,14 @@ class Table:
 
 
 @dataclass
-class StepTable(TypeStep):
+class StepTable(StepType):
     table: Table = None
     is_randomize_rows: bool = False
     is_randomize_columns: bool = False
     is_always_correct: bool = False
     description: str = ""
 
-    def parse(self, markdown: list[str]) -> None:
+    def _parse(self, markdown: list[str]) -> None:
         pass
 
     def body(self) -> dict:
