@@ -1,5 +1,5 @@
 from dataclasses import field, dataclass
-import src.PyParseFormats as PPF
+import src.pyparse_formats as PPF
 from abc import ABC, abstractmethod
 import warnings
 
@@ -169,7 +169,9 @@ class StepQuiz(TypeStep):
                 line_i += 1
                 while line_i < len(markdown) and status == "Text":
                     text.append(markdown[line_i])
-                    if PPF.check_format(markdown[line_i], PPF.format_text_end, _match_all=True):
+                    if PPF.check_format(
+                        markdown[line_i], PPF.format_text_end, _match_all=True
+                    ):
                         status = "None"
                         text.pop(-1)
                     line_i += 1
@@ -197,8 +199,9 @@ class StepQuiz(TypeStep):
                 p_res = PPF.match_format(line, PPF.format_quiz_option)
                 options.append([p_res["letter"], [p_res["text"]]])
                 line_i += 1
-            elif not PPF.check_format(line, PPF.format_quiz_answer) and \
-                    not PPF.check_format(line, PPF.format_quiz_shuffle):
+            elif not PPF.check_format(
+                line, PPF.format_quiz_answer
+            ) and not PPF.check_format(line, PPF.format_quiz_shuffle):
                 options[-1][1].append(line)
                 line_i += 1
             else:
@@ -211,7 +214,8 @@ class StepQuiz(TypeStep):
             if ord(options[i][0]) - ord(options[i - 1][0]) != 1:
                 raise SyntaxError(
                     f"""In {self}: expected "{chr(ord(options[i - 1][0]) + 1)}" after "{options[i - 1][0]}", \
-got "{options[i][0]}" instead""")
+got "{options[i][0]}" instead"""
+                )
 
         # parse for params and answer options ---------------------------------
         ans = set()
@@ -221,15 +225,21 @@ got "{options[i][0]}" instead""")
             line = markdown[line_i]
             if not ans and PPF.check_format(line, PPF.format_quiz_answer):
                 ans = set(PPF.match_format(line, PPF.format_quiz_answer)["answer"])
-            elif (do_shuffle is None) and PPF.check_format(line, PPF.format_quiz_shuffle):
-                do_shuffle = PPF.match_format(line, PPF.format_quiz_shuffle)["do_shuffle"]
+            elif (do_shuffle is None) and PPF.check_format(
+                line, PPF.format_quiz_shuffle
+            ):
+                do_shuffle = PPF.match_format(line, PPF.format_quiz_shuffle)[
+                    "do_shuffle"
+                ]
 
             line_i += 1
             if line_i >= len(markdown):
                 running = False
 
         self.text = PPF.md_to_html(text)
-        self.answers = [(PPF.md_to_html(text), letter in ans) for letter, text in options]
+        self.answers = [
+            (PPF.md_to_html(text), letter in ans) for letter, text in options
+        ]
         self.is_multiple_choice = len(ans) > 1
         self.do_shuffle = self.do_shuffle if do_shuffle is None else do_shuffle
 
@@ -501,6 +511,7 @@ class StepTable(TypeStep):
             }
         }
 
+
 default_step_format = StepText
 
 STEP_MAP = {
@@ -510,5 +521,3 @@ STEP_MAP = {
     "NUMBER": StepNumber,
     "QUIZ": StepQuiz,
 }
-
-

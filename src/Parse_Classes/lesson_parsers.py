@@ -1,7 +1,6 @@
 import warnings
-
-from src.Parse_Classes.StepParsers import *
-import src.PyParseFormats as PPF
+from src.parse_classes.step_parsers import *
+import src.pyparse_formats as PPF
 
 
 class Lesson:
@@ -21,7 +20,9 @@ class Lesson:
         self.f_path = file_path
 
     @staticmethod
-    def read_file(file_path: str) -> list[str]:  # TODO: show default error messages, don't do your own
+    def read_file(
+        file_path: str,
+    ) -> list[str]:  # TODO: show default error messages, don't do your own
         try:
             text_file = open(file_path, "r+", encoding="UTF-8").read().splitlines()
             return text_file
@@ -47,14 +48,16 @@ class Lesson:
 
         # parse for lesson_name and lesson_id ---------------------------------
         name_token = PPF.search_format_in_text(
-            markdown, PPF.format_lesson_name, _amount=1, _from_start=True)
+            markdown, PPF.format_lesson_name, _amount=1, _from_start=True
+        )
         if not name_token:
             warnings.warn(Warning("Lesson name is incorrect"), stacklevel=2)
             return
         self.name = name_token[0][0]["lesson_name"]
 
         id_token = PPF.search_format_in_text(
-            markdown, PPF.format_lesson_id, _from_line=name_token[0][1] + 1, _amount=1)
+            markdown, PPF.format_lesson_id, _from_line=name_token[0][1] + 1, _amount=1
+        )
         if not id_token:  # ID is not always given in file
             self.id = -1
             id_token = (("_", name_token[0][1]),)
@@ -63,20 +66,26 @@ class Lesson:
 
         # parse for steps ---------------------------------------------------
         step_lines = PPF.search_format_in_text(
-            markdown, PPF.format_step_name, _from_line=id_token[0][1] + 1,  _from_start=True)
+            markdown,
+            PPF.format_step_name,
+            _from_line=id_token[0][1] + 1,
+            _from_start=True,
+        )
 
         if len(step_lines) != 0:
             for i in range(len(step_lines) - 1):
-                step_text = markdown[step_lines[i][1]: step_lines[i + 1][1]]
+                step_text = markdown[step_lines[i][1] : step_lines[i + 1][1]]
                 new_step = self.create_step(step_text)
                 self.add_step(new_step)
-            step_text = markdown[step_lines[-1][1]:]
+            step_text = markdown[step_lines[-1][1] :]
             new_step = self.create_step(step_text)
             self.add_step(new_step)
         elif id_token[0][1] + 1 < len(markdown) - 2:  # if no steps, but lots of lines
             warnings.warn(
-                f"Lesson('{self.name}') contains lots of excessive lines", Warning,
-                stacklevel=2)
+                f"Lesson('{self.name}') contains lots of excessive lines",
+                Warning,
+                stacklevel=2,
+            )
 
     @staticmethod
     def identify_step(header_line: str):

@@ -10,7 +10,7 @@ from pyparsing import ParserElement, Regex
 def md_to_html(md_text: list[str] | str):
     if isinstance(md_text, list):
         md_text = "\n".join(md_text)
-    return md.markdown(md_text, extensions=['extra'])
+    return md.markdown(md_text, extensions=["extra"])
 
 
 class HiddenFormats:
@@ -57,7 +57,9 @@ class HiddenFormats:
     _false = pp.Keyword("FALSE", caseless=True)
     _bool = pp.Or((_true, _false)).setParseAction(_to_bool)
 
-    _t_default = pp.Empty().setParseAction(_return_emtpy_string)  # TODO: fix, so == to other types
+    _t_default = pp.Empty().setParseAction(
+        _return_emtpy_string
+    )  # TODO: fix, so == to other types
     _t_text = pp.Keyword("TEXT")
     _t_string = pp.Keyword("STRING")
     _t_number = pp.Keyword("NUMBER")
@@ -76,10 +78,16 @@ class HiddenFormats:
     f_str_ans = _ans + _del_spaces + (pp.restOfLine())("answer")
 
     # format_number_answer     -> [("ANSWER:", *number*, *number*), {'answer': *number*, 'error': *number* or None})]
-    f_num_ans = _ans + _float_number("answer") + pp.Optional(pp.Suppress("±") + _pos_float_number("adm_err"))
+    f_num_ans = (
+        _ans
+        + _float_number("answer")
+        + pp.Optional(pp.Suppress("±") + _pos_float_number("adm_err"))
+    )
 
     # format_quiz_answer
-    f_quiz_ans = _ans + (_upper_letter + pp.ZeroOrMore(pp.Suppress(",") + _upper_letter))("answer")
+    f_quiz_ans = _ans + (
+        _upper_letter + pp.ZeroOrMore(pp.Suppress(",") + _upper_letter)
+    )("answer")
 
     # format_quiz_shuffle
     f_quiz_shuff = _shuff + _bool("do_shuffle")
@@ -94,17 +102,25 @@ class HiddenFormats:
     f_les_name = _h1 + _del_spaces + (pp.restOfLine())("lesson_name")
 
     # format_step_name         -> [("##", *line_of_text*), {'step_name': *line_of_text*}]
-    f_st_name = _h2 + _del_spaces + pp.Or([_st_type("type") + _del_spaces, _t_default("type")])
+    f_st_name = (
+        _h2 + _del_spaces + pp.Or([_st_type("type") + _del_spaces, _t_default("type")])
+    )
     f_st_name = f_st_name + _rest_of_token("step_name")
 
     # format_step_string_name  -> [("##", "STRING", *line_of_text*), {step_name: *line_of_text*}]
-    f_st_str_name = _h2 + _t_string("type") + _del_spaces + (pp.restOfLine())("step_name")
+    f_st_str_name = (
+        _h2 + _t_string("type") + _del_spaces + (pp.restOfLine())("step_name")
+    )
 
     # format_step_number_name  -> [("##", "NUMBER", *line_of_text*), {step_name: *line_of_text*}]
-    f_st_num_name = _h2 + _t_number("type") + _del_spaces + (pp.restOfLine())("step_name")
+    f_st_num_name = (
+        _h2 + _t_number("type") + _del_spaces + (pp.restOfLine())("step_name")
+    )
 
     # format_step_quiz_name    -> [("##", "QUIZ", *line_of_text*), {step_name: *line_of_text*}]
-    f_st_quiz_name = _h2 + _t_quiz("type") + _del_spaces + (pp.restOfLine())("step_name")
+    f_st_quiz_name = (
+        _h2 + _t_quiz("type") + _del_spaces + (pp.restOfLine())("step_name")
+    )
     # ------------------------------------------------------------------------------------------------------------------
     # format_text_begin
     f_t_beg = pp.Keyword("TEXTBEGIN") + _safe_del_spaces + pp.restOfLine()("text")
@@ -116,52 +132,53 @@ class HiddenFormats:
 
 
 format_text_begin = HiddenFormats.f_t_beg
-''' After parsing: \n
-ParseResults( [ "TEXTBEGIN", *line_of_text* ], { 'text': *line_of_text* }, ) '''
+""" After parsing: \n
+ParseResults( [ "TEXTBEGIN", *line_of_text* ], { 'text': *line_of_text* }, ) """
 format_text_end = HiddenFormats.f_t_end
-''' After parsing: \n
-ParseResults( [ "TEXTEND" ], {}, ) '''
+""" After parsing: \n
+ParseResults( [ "TEXTEND" ], {}, ) """
 format_quiz_option = HiddenFormats.f_quiz_opt
-'''After parsing: \n
+"""After parsing: \n
 ParseResults( [ *AIKEN_option*, *line_of_text* ],
-{ 'letter': *AIKEN_option*, 'text': *line_of_text* }, ) '''
+{ 'letter': *AIKEN_option*, 'text': *line_of_text* }, ) """
 
 format_string_answer = HiddenFormats.f_str_ans
-'''After parsing: \n
-ParseResults( [ "ANSWER:", *line_of_text* ], { 'answer': *line_of_text* } )'''
+"""After parsing: \n
+ParseResults( [ "ANSWER:", *line_of_text* ], { 'answer': *line_of_text* } )"""
 format_reg_exp = HiddenFormats.f_regexp
-'''After parsing: \n
-ParseResults( [ "REGEXP:", *line_of_text* ], { 'reg_exp': *line_of_text* } )'''
+"""After parsing: \n
+ParseResults( [ "REGEXP:", *line_of_text* ], { 'reg_exp': *line_of_text* } )"""
 format_number_answer = HiddenFormats.f_num_ans
-'''After parsing: \n
+"""After parsing: \n
 ParseResults( [ "ANSWER:", *float_number_1*, *float_number2* ],
-{ 'answer': *float_number1*, 'adm_err': *float_number_2* } )'''
+{ 'answer': *float_number1*, 'adm_err': *float_number_2* } )"""
 format_quiz_answer = HiddenFormats.f_quiz_ans
-'''After parsing: \n
-ParseResults( [ "ANSWER:", *arr_of_letters* ], { 'answer': *arr_of_letters* } )'''
+"""After parsing: \n
+ParseResults( [ "ANSWER:", *arr_of_letters* ], { 'answer': *arr_of_letters* } )"""
 format_quiz_shuffle = HiddenFormats.f_quiz_shuff
-'''After parsing: \n
-ParseResults( [ "SHUFFLE:", *bool* ], { 'do_shuffle': *bool* } )'''
+"""After parsing: \n
+ParseResults( [ "SHUFFLE:", *bool* ], { 'do_shuffle': *bool* } )"""
 format_lesson_id = HiddenFormats.f_les_id
-'''After parsing: \n
-ParseResults( [ "lesson", "=", *pos_integer* ], { 'lesson_id': *pos_integer* } )'''
+"""After parsing: \n
+ParseResults( [ "lesson", "=", *pos_integer* ], { 'lesson_id': *pos_integer* } )"""
 
 format_lesson_name = HiddenFormats.f_les_name
-'''After parsing: \n
-ParseResults( [ "#", *line_of_text* ], { 'lesson_name': *line_of_text* } )'''
+"""After parsing: \n
+ParseResults( [ "#", *line_of_text* ], { 'lesson_name': *line_of_text* } )"""
 format_step_name = HiddenFormats.f_st_name
-'''After parsing: \n
+"""After parsing: \n
 ParseResults( [ "##", *step_type*, *line_of_text* ], 
-{ 'type': *step_type*, 'step_name': *line_of_text* } )'''
+{ 'type': *step_type*, 'step_name': *line_of_text* } )"""
 
 
 def search_format_in_text(
-        text: list[str],
-        parse_exp: pp.ParserElement,
-        _from_line: int | None = None,
-        _to_line: int | None = None,
-        _amount: int = -1,
-        _from_start: bool = False, ) -> list[tuple[pp.ParseResults, int, int, int]]:
+    text: list[str],
+    parse_exp: pp.ParserElement,
+    _from_line: int | None = None,
+    _to_line: int | None = None,
+    _amount: int = -1,
+    _from_start: bool = False,
+) -> list[tuple[pp.ParseResults, int, int, int]]:
     """Returns: tuple[ParseResults, line_index, start_index_in_line, end_index_in_line].
 
     - ``_from_line`` index of line to search from (works like with slices).
@@ -203,7 +220,9 @@ def search_format_in_text(
     return ans
 
 
-def check_format(text: str, parse_exp: pp.ParserElement, _match_all: bool = True) -> bool:
+def check_format(
+    text: str, parse_exp: pp.ParserElement, _match_all: bool = True
+) -> bool:
     try:
         _ = parse_exp.parse_string(text)
         result = True
@@ -212,18 +231,23 @@ def check_format(text: str, parse_exp: pp.ParserElement, _match_all: bool = True
     return result
 
 
-def find_format(text: str, parse_exp: pp.ParserElement, _from_start: bool = False, _amount: int = 1) -> tuple:
+def find_format(
+    text: str, parse_exp: pp.ParserElement, _from_start: bool = False, _amount: int = 1
+) -> tuple:
     # TODO: add _from_start
     match = tuple(parse_exp.scan_string(text, max_matches=_amount))
     return match
 
 
-def match_format(text: str, parse_exp: pp.ParserElement, _match_all: bool = False) -> pp.ParseResults:
+def match_format(
+    text: str, parse_exp: pp.ParserElement, _match_all: bool = False
+) -> pp.ParseResults:
     try:
         match = parse_exp.parseString(text, parse_all=_match_all)
         return match
     except Exception:
         return pp.ParseResults([])
+
 
 # def match_format(text: str, parse_exp):
 #    pass
