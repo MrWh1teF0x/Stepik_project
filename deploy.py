@@ -15,6 +15,9 @@ def update_lesson(file: str, lesson_id, step_number: int = None) -> None:
             raise AttributeError("Id of lesson is unknown!")
         lesson_id = lesson.id
 
+    if step_number and step_number > 0:
+        step_number -= 1
+
     online_steps: list[OnlineStep] = []
     for i, step in enumerate(lesson.steps):
         step.lesson_id = lesson_id
@@ -25,9 +28,7 @@ def update_lesson(file: str, lesson_id, step_number: int = None) -> None:
     if step_number is None:
         online_lesson.update(online_steps)
     else:
-        online_lesson.steps[step_number - 1].update(
-            online_steps[step_number - 1].step_data
-        )
+        online_lesson.steps[step_number].update(online_steps[step_number].step_data)
 
 
 @click.group()
