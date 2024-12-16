@@ -65,6 +65,7 @@ class StepString(StepType):
     case_sensitive: bool = False
     use_re: bool = False
     answer: str = ""
+    cost: int = 1
 
     def __repr__(self):
         return f"StepString('{self.title}')"
@@ -108,6 +109,7 @@ class StepString(StepType):
 class StepNumber(StepType):
     answer: float = None
     max_error: float = 0
+    cost: int = 1
 
     def __repr__(self):
         return f"StepNumber('{self.title}')"
@@ -153,6 +155,7 @@ class StepQuiz(StepType):
     answers: list[tuple[str, bool]] = field(default_factory=list)
     do_shuffle: bool = True
     is_multiple_choice: bool = True
+    cost: int = 1
 
     def __repr__(self):
         return f"StepQuiz('{self.title}')"
@@ -285,6 +288,7 @@ class StepTask(StepType):
     execution_time_limit: int = 5
     execution_memory_limit: int = 256
     test_cases: list[TaskTest] = field(default_factory=list)
+    cost: int = 5
 
     def _parse(self, markdown: list[str]) -> None:
         pass
@@ -322,6 +326,7 @@ class StepTask(StepType):
 @dataclass
 class StepSort(StepType):
     sorted_answers: list[str] = field(default_factory=list)
+    cost: int = 5
 
     def _parse(self, markdown: list[str]) -> None:
         pass
@@ -353,6 +358,7 @@ class MatchPair:
 class StepMatch(StepType):
     preserve_firsts_order: bool = True
     pairs: list[MatchPair] = field(default_factory=list)
+    cost: int = 5
 
     def _parse(self, markdown: list[str]) -> None:
         pass
@@ -441,6 +447,7 @@ class StepFill(StepType):
     is_detailed_feedback: bool = False
     is_partially_correct: bool = False
     components: list[BlankType] = field(default_factory=list)
+    cost: int = 5
 
     def _parse(self, markdown: list[str]) -> None:
         pass
@@ -490,6 +497,7 @@ class StepTable(StepType):
     is_randomize_columns: bool = False
     is_always_correct: bool = False
     description: str = ""
+    cost: int = 10
 
     def _parse(self, markdown: list[str]) -> None:
         pass
