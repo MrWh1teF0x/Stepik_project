@@ -1,3 +1,8 @@
+import pprint
+
+from src.Parse_Classes.LessonParsers import Lesson
+from src.Parse_Classes.StepParsers import StepTaskInLine
+from src.PyParseFormats import *
 import pytest
 
 from src.parse_classes.lesson_parsers import Lesson
@@ -418,20 +423,85 @@ def test_Steps_formats():
         print([res])
         res = match_format("TRUE", HiddenFormats._bool)
         print([res])
-        res = match_format("SHUFFLE: TRUE", format_quiz_shuffle)
+        res = match_format("SHUFFLE: TRuE", format_quiz_shuffle)
         print([res])
-        a = "A. `len(s)`"
-        assert check_format(a, format_quiz_option)
-        b = "A."
-        assert check_format(b, format_quiz_option)
+        res = match_format("_test_data = 103", HiddenFormats.f_til_param)
+        print([res])
+        res = match_format("_test_data = 103 ", HiddenFormats.f_til_param)
+        print([res])
+        res = match_format("_test_data = ", HiddenFormats.f_til_param)
+        print([res])
+        res = match_format("_test_data = 103 123dada123", HiddenFormats.f_til_param)
+        print([res])
+    a = "A. `len(s)`"
+    assert check_format(a, format_quiz_option)
+    b = "A."
+    assert check_format(b, format_quiz_option)
 
 
 def test_Step_Quiz():
+    text = ["## QUIZ quiz",
+            "some text",
+            "more text",
+            "",
+            "A) a"
+            "B) b"
+            "",
+            "ANSWER: A, B"
+            ]
+
+
+def test_Step_TaskInLine():
+    if __do_debug:
+        print()
     text = [
-        "## QUIZ quiz",
-        "some text",
-        "more text",
+        "## TASKINLINE Задача написанная в .md",
         "",
-        "A) a" "B) b" "",
-        "ANSWER: A, B",
+        "Should parse like plain text",
+        "some more text",
+        "",
+        "text after emtpy line",
+        "singleword",
+        "",
+        "```python",
+        "def func(a, b):",
+        "    # put code here",
+        "",
+        "a, b = map(float, input().split())  # read params",
+        "s = func(a, b)                      # call function",
+        "print(s)                            # output result",
+        "```",
+        "TEST",
+        "1 2",
+        "----",
+        "2.0",
+        "====",
+        "-10.1 10",
+        "----",
+        "-101.0",
+        "====",
+        "CODE",
+        "def func(a, b):",
+        "    # put code here",
+        "",
+        "a, b = map(float, input().split())  # read params",
+        "s = func(a, b)                      # call function",
+        "print(s)                            # output result",
+        "",
+        "CONFIG",
+        "code_lang = python3",
+        "cost = 100",
+        "check_format = std_float_seq",
+        "wrong_param = wrong_value",
+        "HEADER",
+        "HEADER IT IS",
+        "FOOTER",
+        "print(\"hi\")",
     ]
+
+    step = StepTaskInLine()
+    step.parse(text)
+    if __do_debug:
+        print([step.pre_code])
+        print([step.post_code])
+        pprint.pprint(step.body())

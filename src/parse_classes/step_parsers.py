@@ -64,8 +64,7 @@ class StepString(StepType):
     match_substring: bool = False
     case_sensitive: bool = False
     use_re: bool = False
-    answer: str = ""
-    cost: int = 1
+    answer: str | None = None
 
     def __repr__(self):
         return f"StepString('{self.title}')"
@@ -73,14 +72,11 @@ class StepString(StepType):
     def _parse(self, markdown: list[str]) -> None:
         text = []
         for line in markdown:
-            if PPF.check_format(line, PPF.format_string_answer, _match_all=True):
-                # TODO: might want to check for a several answer tokens
+            if not (self.answer is None) and PPF.check_format(line, PPF.format_string_answer, _match_all=True):
                 self.answer = PPF.match_format(line, PPF.format_string_answer)["answer"]
             else:
                 text.append(line)
         self.text = PPF.md_to_html(text)
-
-        self.body()
 
     def body(self) -> dict:
         return {
@@ -173,9 +169,7 @@ class StepQuiz(StepType):
                 line_i += 1
                 while line_i < len(markdown) and status == "Text":
                     text.append(markdown[line_i])
-                    if PPF.check_format(
-                        markdown[line_i], PPF.format_text_end, _match_all=True
-                    ):
+                    if PPF.check_format(markdown[line_i], PPF.format_text_end, _match_all=True):
                         status = "None"
                         text.pop(-1)
                     line_i += 1
@@ -281,17 +275,105 @@ class TaskTest:
     output: str = ""
 
 
-@dataclass
-class StepTask(StepType):
+class StepTaskInLine(TypeStep):
     code: str = ""
+    pre_code: str = ""
+    post_code: str = ""
+    test_cases: list[TaskTest] = field(default_factory=list)
+    # config params
+    code_lang: str = ""
     samples_count: int = 1
     execution_time_limit: int = 5
     execution_memory_limit: int = 256
-    test_cases: list[TaskTest] = field(default_factory=list)
-    cost: int = 5
+
+    def __repr__(self):
+        return f"StepTaskInLine('{self.title}')"
 
     def _parse(self, markdown: list[str]) -> None:
-        pass
+        default_section_parse = self._parse_text
+        sections = {"CONFIG": self._parse_config,
+                    "CODE": self._parse_code,
+                    "HEADER": self._parse_header,
+                    "FOOTER": self._parse_footer,
+                    "TEST": self._parse_tests,
+                    "": None, }
+
+        section_list = PPF.search_format_in_text(
+            markdown, PPF.format_taskinline_sectors, _from_start=True)
+        section_list.append((None, len(markdown), 0, 0))  # so that last section will parse
+
+        if len(section_list) != 0:
+            default_section_parse(markdown[:section_list[0][1]])
+            for i in range(len(section_list) - 1):
+                k = section_list[i][0].get("section_type", "")
+                parse_func = sections[k]
+                section_text = markdown[section_list[i][1]:section_list[i + 1][1]]
+                if parse_func is not None:
+                    parse_func(section_text)
+                else:
+                    default_section_parse(section_text)
+                    warnings.warn(
+                        f"Wrong section token in {self}: {section_list[i][0]}",
+                        Warning, stacklevel=2)
+
+    def _parse_text(self, markdown: list[str]):
+        self.text = PPF.md_to_html(markdown)
+
+    def _parse_code(self, markdown: list[str]):
+        self.code = "\n".join(markdown[1:])
+
+    def _parse_header(self, markdown: list[str]):
+        self.pre_code = "\n".join(markdown[1:])
+
+    def _parse_footer(self, markdown: list[str]):
+        self.post_code = "\n".join(markdown[1:])
+
+    def _parse_tests(self, markdown: list[str]):
+        self.test_cases = []
+
+        test = [[], []]
+        state = "input"
+        for i in range(1, len(markdown)):
+            if PPF.check_format(markdown[i], PPF.format_test_data_seperator):
+                if state != "input":
+                    warnings.warn(
+                        f"Wrong test format in {self}: IN->OUT seperator in wrong place (testline index: {i})",
+                        Warning, stacklevel=2
+                    )
+                    return
+                state = "output"
+            elif PPF.check_format(markdown[i], PPF.format_tests_seperator):
+                self.test_cases.append(TaskTest("\n".join(test[0]), "\n".join(test[1])))
+                test = [[], []]
+                state = "input"
+
+            elif state == "input":
+                test[0].append(markdown[i])
+            elif state == "output":
+                test[1].append(markdown[i])
+
+    def _parse_config(self, markdown: list[str]):
+        for i in range(1, len(markdown)):
+            res = PPF.match_format(markdown[i], PPF.format_taskinline_parameter)
+            if not res.asList():
+                continue
+
+            if hasattr(self, res['parameter']):
+                setattr(self, res['parameter'], res['value'])
+            else:
+                warnings.warn(
+                    f"In {self}: config section has excessive parameter - '{res['parameter']}'"
+                )
+
+    def build_code_template(self):
+        if not self.code_lang:
+            return ''
+        s = f'::{self.code_lang}\n'
+        if self.pre_code:
+            s = s + '::header\n' + self.pre_code + '\n'
+        if self.post_code:
+            s = s + '::footer\n' + self.post_code + '\n'
+        return s
 
     def body(self) -> dict:
         return {
@@ -300,11 +382,11 @@ class StepTask(StepType):
                     "name": "code",
                     "text": self.text,
                     "source": {
-                        "code": "def generate():\n    return []\n\ndef check(reply, clue):\n    return reply.strip() == clue.strip()\n",
+                        "code": self.code,
                         "samples_count": self.samples_count,
                         "execution_time_limit": self.execution_time_limit,
                         "execution_memory_limit": self.execution_memory_limit,
-                        "templates_data": "",
+                        "templates_data": self.build_code_template(),
                         "is_time_limit_scaled": True,
                         "is_memory_limit_scaled": True,
                         "is_run_user_code_allowed": True,
@@ -528,12 +610,13 @@ class StepTable(StepType):
         }
 
 
-default_step_format = StepText
+default_step = StepText
 
 STEP_MAP = {
-    "": default_step_format,
+    "": default_step,
     "TEXT": StepText,
     "STRING": StepString,
     "NUMBER": StepNumber,
     "QUIZ": StepQuiz,
+    "TASKINLINE": StepTaskInLine,
 }
