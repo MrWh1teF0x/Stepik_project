@@ -1,15 +1,36 @@
 import pyparsing as pp
 import markdown as md
+from markdown.preprocessors import Preprocessor
+from markdown.extensions import Extension
+import re
 
 # WARNING: pyparsing can cause errors with encodings (unicode) ----------------------------------------------------- !!!
-import re
 from pyparsing import ParserElement, Regex
 
 
+# TO THE SOLUTION THANKS TO https://github.com/selcuk ===================================================
+urlfinder = re.compile(r'((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+(:[0-9]+)?|'
+                       r'(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:/[\+~%/\.\w\-_]*)?\??'
+                       r'(?:[\-\+=&;%@\.\w_]*)#?(?:[\.!/\\\w]*))?)')
+
+
+class URLify(Preprocessor):
+    def run(self, lines):
+        return [urlfinder.sub(r'<\1>', line) for line in lines]
+
+
+class URLifyExtension(Extension):
+    def extendMarkdown(self, md):
+        md.preprocessors.register(URLify(md), 'urlify', 0)
+# =======================================================================================================
+
+
 def md_to_html(md_text: list[str] | str):
+    urlify_ext = URLifyExtension()
     if isinstance(md_text, list):
         md_text = "\n".join(md_text)
-    return md.markdown(md_text, extensions=["extra"])
+    extentions = [urlify_ext, "extra"]
+    return md.markdown(md_text, extensions=extentions)
 
 
 class HiddenFormats:
