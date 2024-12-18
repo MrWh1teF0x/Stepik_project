@@ -75,8 +75,8 @@ class Lesson:
             self.add_step(new_step)
         elif id_token[0][1] + 1 < len(markdown) - 2:  # if no steps, but lots of lines
             warnings.warn(
-                f"Lesson('{self.name}') contains lots of excessive lines", Warning,
-                stacklevel=2)
+                f"Lesson('{self.name}') contains lots of excessive lines",
+                Warning, stacklevel=2)
 
     @staticmethod
     def identify_step(header_line: str):
