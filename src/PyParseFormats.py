@@ -202,9 +202,9 @@ def search_format_in_text(
     return ans
 
 
-def check_format(text: str, parse_exp: pp.ParserElement, _from_start: bool = False) -> bool:
+def check_format(text: str, parse_exp: pp.ParserElement, _match_all: bool = True) -> bool:
     try:
-        _ = parse_exp.parse_string(text)
+        _ = parse_exp.parse_string(text, parse_all=_match_all)
         result = True
     except Exception:
         result = False

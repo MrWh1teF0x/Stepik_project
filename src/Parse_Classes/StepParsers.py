@@ -71,14 +71,11 @@ class StepString(TypeStep):
     def _parse(self, markdown: list[str]) -> None:
         text = []
         for line in markdown:
-            if PPF.check_format(line, PPF.format_string_answer, _from_start=True):
-                # TODO: might want to check for a several answer tokens
+            if not (self.answer is None) and PPF.check_format(line, PPF.format_string_answer, _match_all=True):
                 self.answer = PPF.match_format(line, PPF.format_string_answer)["answer"]
             else:
                 text.append(line)
         self.text = PPF.md_to_html(text)
-
-        self.body()
 
     def body(self) -> dict:
         return {
@@ -114,7 +111,7 @@ class StepNumber(TypeStep):
     def _parse(self, markdown: list[str]) -> None:
         text = []
         for line in markdown:
-            if PPF.check_format(line, PPF.format_number_answer, _from_start=True):
+            if PPF.check_format(line, PPF.format_number_answer, _match_all=True):
                 a = PPF.match_format(line, PPF.format_number_answer)
                 self.answer = a["answer"]
                 self.max_error = a.get("adm_err", 0)
@@ -163,13 +160,13 @@ class StepQuiz(TypeStep):
         while running:
             line = markdown[line_i]
 
-            if PPF.check_format(line, PPF.format_text_begin, _from_start=True):
+            if PPF.check_format(line, PPF.format_text_begin, _match_all=True):
                 status = "Text"
                 text.append(PPF.match_format(line, PPF.format_text_begin)["text"])
                 line_i += 1
                 while line_i < len(markdown) and status == "Text":
                     text.append(markdown[line_i])
-                    if PPF.check_format(markdown[line_i], PPF.format_text_end, _from_start=True):
+                    if PPF.check_format(markdown[line_i], PPF.format_text_end, _match_all=True):
                         status = "None"
                         text.pop(-1)
                     line_i += 1
