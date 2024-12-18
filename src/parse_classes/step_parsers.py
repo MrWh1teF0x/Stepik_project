@@ -386,7 +386,7 @@ class StepTaskInLine(StepType):
                         "samples_count": self.samples_count,
                         "execution_time_limit": self.execution_time_limit,
                         "execution_memory_limit": self.execution_memory_limit,
-                        "templates_data": self.build_code_template(),
+                        "templates_data": "",
                         "is_time_limit_scaled": True,
                         "is_memory_limit_scaled": True,
                         "is_run_user_code_allowed": True,
