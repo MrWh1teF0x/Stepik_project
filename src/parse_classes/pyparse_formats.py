@@ -3,7 +3,6 @@ import markdown as md
 
 # WARNING: pyparsing can cause errors with encodings (unicode) ----------------------------------------------------- !!!
 import re
-
 from pyparsing import ParserElement, Regex
 
 
@@ -172,7 +171,7 @@ REGEXP:
     ParseResults( [ "REGEXP:", *line_of_text* ], { 'reg_exp': *line_of_text* } )'''
 
 format_number_answer = HiddenFormats.f_num_ans
-"""After parsing: \n
+'''After parsing: \n
 ParseResults( [ "ANSWER:", *float_number_1*, *float_number2* ],
 { 'answer': *float_number1*, 'adm_err': *float_number_2* } )'''
 format_number_sectors = HiddenFormats.f_num_sect

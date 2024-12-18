@@ -1,14 +1,13 @@
+import os
 import pprint
 
-from src.Parse_Classes.LessonParsers import Lesson
-from src.Parse_Classes.StepParsers import StepTaskInLine
-from src.PyParseFormats import *
+from src.parse_classes.step_parsers import StepTaskInLine
 import pytest
 
 from src.parse_classes.lesson_parsers import Lesson
 from src.parse_classes.pyparse_formats import *
 
-__do_debug = True
+__do_debug = False
 
 
 def test_Lesson_init():
@@ -133,72 +132,36 @@ def test_format_lesson_name():
         "",
     ]
     check_arr = (
+        True, False, False, False,
+        True, False, False, False,
         True,
-        False,
-        False,
-        False,
-        True,
-        False,
-        False,
-        False,
-        True,
-        True,
-        False,
-        False,
-        False,
-        True,
-        False,
+        True, False, False, False,
+        True, False,
     )
     match_lst = (
-        ["#", "TEXT 123123123  "],
-        [],
-        [],
-        [],
-        ["#", "not Another step name"],
-        [],
-        [],
-        [],
+        ["#", "TEXT 123123123  "], [], [], [],
+        ["#", "not Another step name"], [], [], [],
         ["#", "some spaces before text"],
-        ["#", ""],
-        [],
-        [],
-        [],
-        ["#", "bad ## line # to ## live   "],
-        [],
+        ["#", ""], [], [], [],
+        ["#", "bad ## line # to ## live   "], [],
     )
     match_dct = (
-        {"lesson_name": "TEXT 123123123  "},
-        dict(),
-        dict(),
-        dict(),
-        {"lesson_name": "not Another step name"},
-        dict(),
-        dict(),
-        dict(),
+        {"lesson_name": "TEXT 123123123  "}, dict(), dict(), dict(),
+        {"lesson_name": "not Another step name"}, dict(), dict(), dict(),
         {"lesson_name": "some spaces before text"},
-        {"lesson_name": ""},
-        dict(),
-        dict(),
-        dict(),
-        {"lesson_name": "bad ## line # to ## live   "},
-        dict(),
+        {"lesson_name": ""}, dict(), dict(), dict(),
+        {"lesson_name": "bad ## line # to ## live   "}, dict(),
     )
     find_arr = (
-        (0, 18),
-        (),
-        (),
-        (),
-        (0, 23),
-        (4, 14),
-        (),
-        (18, 30),
-        (3, 28),
-        (3, 5),
-        (),
-        (1, 17),
-        (2, 13),
-        (3, 32),
-        (),
+        (0, 19), (), (), (),
+        (0, 24),
+        (4, 15), (),
+        (18, 31),
+        (3, 29),
+        (3, 6), (),
+        (1, 18),
+        (2, 14),
+        (3, 33), (),
     )
 
     check_format_on_text(
@@ -324,11 +287,11 @@ def test_number_answer_format():
 
     a = format_number_answer.parseString("ANSWER: 123")
     assert a.asList() == ["ANSWER:", "123"]
-    assert a.asDict() == {"answer": "123"}
+    assert a.asDict() == {"answer": "123", 'section_type': 'ANSWER'}
 
     b = format_number_answer.parseString("ANSWER: 123.123")
     assert b.asList() == ["ANSWER:", "123.123"]
-    assert b.asDict() == {"answer": "123.123"}
+    assert b.asDict() == {"answer": "123.123", 'section_type': 'ANSWER'}
 
     with pytest.raises(pp.exceptions.ParseException):
         c = format_number_answer.parseString("ANSWER 123.123")
@@ -337,15 +300,15 @@ def test_number_answer_format():
 
     d = format_number_answer.parseString("ANSWER: 123±657")
     assert d.asList() == ["ANSWER:", "123", "657"]
-    assert d.asDict() == {"answer": "123", "adm_err": "657"}
+    assert d.asDict() == {"answer": "123", "adm_err": "657", 'section_type': 'ANSWER'}
 
     e = format_number_answer.parseString("ANSWER: 123.567±9.11")
     assert e.asList() == ["ANSWER:", "123.567", "9.11"]
-    assert e.asDict() == {"answer": "123.567", "adm_err": "9.11"}
+    assert e.asDict() == {"answer": "123.567", "adm_err": "9.11", 'section_type': 'ANSWER'}
 
     f = format_number_answer.parseString("ANSWER: -152±28.2")
     assert f.asList() == ["ANSWER:", "-152", "28.2"]
-    assert f.asDict() == {"answer": "-152", "adm_err": "28.2"}
+    assert f.asDict() == {"answer": "-152", "adm_err": "28.2", 'section_type': 'ANSWER'}
 
     with pytest.raises(pp.exceptions.ParseException):
         g = format_number_answer.parseString("ANSWER: -59±-21243.1", parse_all=True)

@@ -275,7 +275,7 @@ class TaskTest:
     output: str = ""
 
 
-class StepTaskInLine(TypeStep):
+class StepTaskInLine(StepType):
     code: str = ""
     pre_code: str = ""
     post_code: str = ""
