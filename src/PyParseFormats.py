@@ -14,7 +14,12 @@ def md_to_html(md_text: list[str] | str):
 
 
 class HiddenFormats:
+    _unexpected = pp.SkipTo(pp.LineEnd(), include=True)("Unexpected_string")
+    _del_spaces = pp.Suppress(pp.White())
+    _safe_del_spaces = pp.Optional(_del_spaces)
+    _rest_of_string = pp.SkipTo(pp.StringEnd(), include=True)
 
+# ------  types tokens  -----------------------------------------------------------------------------------------------
     @staticmethod
     def _to_bool(toks: pp.ParseResults):
         tok_lst = toks.asList()
@@ -35,123 +40,191 @@ class HiddenFormats:
                 tok_list[i] = int(tok_list[i])
         return tok_list
 
+    _param_key = pp.Combine(pp.Word(pp.alphas + "_") + pp.ZeroOrMore(pp.Word(pp.alphanums + "_")))
+    _param_val = pp.Combine(_safe_del_spaces + pp.SkipTo(pp.White() ^ pp.LineEnd(), include=False))
+
+    _upper_letter = pp.Char("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    _AIKEN_option = pp.Combine(_upper_letter + pp.Suppress(pp.Char(".)")))
+
+    _pos_int_format = pp.Word(pp.nums)
+    _int_format = pp.Combine(pp.Optional("-") + _pos_int_format)
+    _pos_integer = _pos_int_format.copy().setParseAction(_to_int)
+    _integer = _int_format.copy().setParseAction(_to_int)
+    _pos_float_number = pp.Combine(_pos_int_format + pp.Optional("." + _pos_int_format))
+    _float_number = pp.Combine(_int_format + pp.Optional("." + _pos_int_format))
+
+    _true = pp.Keyword("TRUE", caseless=True)
+    _false = pp.Keyword("FALSE", caseless=True)
+    _bool = pp.Or((_true, _false)).setParseAction(_to_bool)
+
+# ------  step types  -------------------------------------------------------------------------------------------------
     @staticmethod
     def _return_emtpy_string(toks: pp.ParseResults):
         tok_list = toks.asList()
         tok_list.append("")
         return tok_list
 
-    _unexpected = pp.SkipTo(pp.LineEnd(), include=True)("Unexpected_string")
-    _del_spaces = pp.Suppress(pp.White())
-    _safe_del_spaces = pp.Optional(_del_spaces)
-    _rest_of_token = pp.SkipTo(pp.StringEnd(), include=True)
-
-    _upper_letter = pp.Char("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-    _pos_int_format = pp.Word(pp.nums)
-    _int_format = pp.Combine(pp.Optional("-") + _pos_int_format)
-    _pos_integer = _pos_int_format.copy().setParseAction(_to_int)
-    _integer = _int_format.copy().setParseAction(_to_int)
-    _float_number = pp.Combine(_int_format + "." + _pos_int_format)
-    _true = pp.Keyword("TRUE", caseless=True)
-    _false = pp.Keyword("FALSE", caseless=True)
-    _bool = pp.Or((_true, _false)).setParseAction(_to_bool)
-
-    _t_default = pp.Empty().setParseAction(_return_emtpy_string)  # TODO: fix, so == to other types
+    _t_default = pp.Empty().setParseAction(_return_emtpy_string)
     _t_text = pp.Keyword("TEXT")
     _t_string = pp.Keyword("STRING")
     _t_number = pp.Keyword("NUMBER")
     _t_quiz = pp.Keyword("QUIZ")
+    # _t_task = pp.Keyword("TASK")
+    _t_taskinline = pp.Keyword("TASKINLINE")
 
-    _st_type = pp.Or((_t_text, _t_string, _t_number, _t_quiz))
+    _st_type = pp.Or((_t_text, _t_string, _t_number, _t_quiz, _t_taskinline))
 
-    _AIKEN_option = pp.Combine(_upper_letter + pp.Suppress(pp.Char(".)")))
-    _ans = pp.Literal("ANSWER:")
-    _shuff = pp.Literal("SHUFFLE:")
+# ------  section tokens  ---------------------------------------------------------------------------------------------
+    _ans = pp.Combine(pp.Literal("ANSWER")("section_type") + ":")
+    _reg_exp = pp.Combine(pp.Literal("REGEXP")("section_type") + ":")
+    _shuff = pp.Combine(pp.Literal("SHUFFLE")("section_type") + ":")
+    _t_begin = pp.Keyword("TEXTBEGIN")("section_type")
+    _t_end = pp.Keyword("TEXTEND")("section_type")
+    _code = pp.Keyword("CODE")("section_type")
+    _pre_code = pp.Keyword("HEADER")("section_type")
+    _post_code = pp.Keyword("FOOTER")("section_type")
+    _code_tests = pp.Keyword("TEST")("section_type")
+    _config = pp.Keyword("CONFIG")("section_type")
     _h1 = pp.Keyword("#")
     _h2 = pp.Keyword("##")
 
-    # ==================================================================================================================
-    # format_string_answer     -> [("ANSWER:", *line_of_text*), {'answer': *line_of_text*}]
-    f_str_ans = _ans + _del_spaces + (pp.restOfLine())("answer")
-
-    # format_number_answer     -> [("ANSWER:", *number*, *number*), {'answer': *number*, 'error': *number* or None})]
-    f_num_ans = _ans + _float_number("answer") + pp.Optional(pp.Suppress("±") + _float_number)("adm_err")
-
-    # format_quiz_answer
-    f_quiz_ans = _ans + (_upper_letter + pp.ZeroOrMore(pp.Suppress(",") + _upper_letter))("answer")
-
-    # format_quiz_shuffle
-    f_quiz_shuff = _shuff + _bool("do_shuffle")
-
-    # format_reg_exp           -> [("ANSWER:", *line_of_text*), {'answer': *line_of_text*}]
-    f_regexp = pp.Literal("REGEXP:") + _del_spaces + (pp.restOfLine())("reg_exp")
-
-    # format_lesson_id         -> [("lesson", "=", *number*) {'lesson': *number*}]
+# ====== MAJOR FORMATS ================================================================================================
+    # format_lesson_name  and  format_lesson_id
+    f_les_name = _h1 + _del_spaces + _rest_of_string("lesson_name")
     f_les_id = pp.Literal("lesson") + "=" + _pos_integer("lesson_id")
-    # ------------------------------------------------------------------------------------------------------------------
-    # format_lesson_name       -> [("#", *line_of_text*), {'lesson_name': *line_of_text*}]
-    f_les_name = _h1 + _del_spaces + (pp.restOfLine())("lesson_name")
-
-    # format_step_name         -> [("##", *line_of_text*), {'step_name': *line_of_text*}]
+    # format_step_name
     f_st_name = _h2 + _del_spaces + pp.Or([_st_type("type") + _del_spaces, _t_default("type")])
-    f_st_name = f_st_name + _rest_of_token("step_name")
+    f_st_name = f_st_name + _rest_of_string("step_name")
+    # check formats
+    f_config = _config + pp.StringEnd()
+    f_test_data_sep = pp.Literal("----") + pp.StringEnd()
+    f_test_sep = pp.Literal("====") + pp.StringEnd()
+    # universal formats
+    f_t_beg = _t_begin + _safe_del_spaces + _rest_of_string("text")
+    f_t_end = _t_end + pp.StringEnd()
 
-    # format_step_string_name  -> [("##", "STRING", *line_of_text*), {step_name: *line_of_text*}]
-    f_st_str_name = _h2 + _t_string("type") + _del_spaces + (pp.restOfLine())("step_name")
+# ------  step sections  ----------------------------------------------------------------------------------------------
+    # Step string
+    f_str_ans = _ans + _safe_del_spaces + _rest_of_string("answer")
+    f_str_regexp = _reg_exp + _del_spaces + _rest_of_string("reg_exp")
+    f_str_sect = pp.Or([f_config, f_str_ans, f_str_regexp])
 
-    # format_step_number_name  -> [("##", "NUMBER", *line_of_text*), {step_name: *line_of_text*}]
-    f_st_num_name = _h2 + _t_number("type") + _del_spaces + (pp.restOfLine())("step_name")
+    # Step number
+    f_num_ans = _ans + _float_number("answer") + pp.Optional(pp.Suppress("±") + _pos_float_number("adm_err"))
+    f_num_sect = pp.Or([f_config, f_num_ans])
 
-    # format_step_quiz_name    -> [("##", "QUIZ", *line_of_text*), {step_name: *line_of_text*}]
-    f_st_quiz_name = _h2 + _t_quiz("type") + _del_spaces + (pp.restOfLine())("step_name")
-    # ------------------------------------------------------------------------------------------------------------------
-    # format_text_begin
-    f_t_beg = pp.Keyword("TEXTBEGIN") + _safe_del_spaces + pp.restOfLine()("text")
-    # format_text_end
-    f_t_end = pp.Keyword("TEXTEND")
-    # format_quiz_option
+    # Step quiz
+    f_quiz_ans = _ans + (_upper_letter + pp.ZeroOrMore(pp.Suppress(",") + _upper_letter))("answer")
+    f_quiz_shuff = _shuff + _bool("do_shuffle")
     f_quiz_opt = _AIKEN_option("letter") + _safe_del_spaces + pp.restOfLine()("text")
-    # format
+    f_quiz_sect = pp.Or([f_config, f_t_beg, f_t_end, f_quiz_ans, f_quiz_shuff, f_quiz_opt])
 
+    # Step task_in_line
+    f_til_param = _param_key("parameter") + "=" + _param_val("value")
+    f_til_code = _code + pp.StringEnd()
+    f_til_pre_code = _pre_code + pp.StringEnd()
+    f_til_post_code = _post_code + pp.StringEnd()
+    f_til_test = _code_tests + pp.StringEnd()
+    f_til_sect = pp.Or([f_config, f_til_code,
+                        f_til_pre_code, f_til_post_code, f_til_test])
+
+
+format_lesson_name = HiddenFormats.f_les_name
+'''After parsing: \n
+ParseResults( [ "#", *line_of_text* ], { 'lesson_name': *line_of_text* } )'''
+format_lesson_id = HiddenFormats.f_les_id
+'''After parsing: \n
+ParseResults( [ "lesson", "=", *pos_integer* ], { 'lesson_id': *pos_integer* } )'''
+format_step_name = HiddenFormats.f_st_name
+'''After parsing: \n
+ParseResults( [ "##", *step_type*, *line_of_text* ], 
+{ 'type': *step_type*, 'step_name': *line_of_text* } )'''
+format_config = HiddenFormats.f_config
+'''Simple parse, if format: \n
+ParseResults( [ "CONFIG" ], {} )'''
+format_test_data_seperator = HiddenFormats.f_test_data_sep
+'''Simple parse, if format: \n
+ParseResults( [ "----" ], {} )'''
+format_tests_seperator = HiddenFormats.f_test_sep
+'''Simple parse, if format: \n 
+ParseResults( [ "====" ], {} )'''
 
 format_text_begin = HiddenFormats.f_t_beg
 ''' After parsing: \n
-ParseResults( [ "TEXTBEGIN", *line_of_text* ], { 'text': *line_of_text* }, ) '''
+ParseResults( [ "TEXTBEGIN", *line_of_text* ], { 'text': *line_of_text* } ) '''
 format_text_end = HiddenFormats.f_t_end
 ''' After parsing: \n
-ParseResults( [ "TEXTEND" ], {}, ) '''
-format_quiz_option = HiddenFormats.f_quiz_opt
-'''After parsing: \n
-ParseResults( [ *AIKEN_option*, *line_of_text* ],
-{ 'letter': *AIKEN_option*, 'text': *line_of_text* }, ) '''
+ParseResults( [ "TEXTEND" ], {} ) '''
 
 format_string_answer = HiddenFormats.f_str_ans
 '''After parsing: \n
 ParseResults( [ "ANSWER:", *line_of_text* ], { 'answer': *line_of_text* } )'''
-format_reg_exp = HiddenFormats.f_regexp
+format_string_reg_exp = HiddenFormats.f_str_regexp
 '''After parsing: \n
 ParseResults( [ "REGEXP:", *line_of_text* ], { 'reg_exp': *line_of_text* } )'''
+format_string_sectors = HiddenFormats.f_str_sect
+'''Will parse, if formats found: \n
+CONFIG:
+    ParseResults( [ "CONFIG" ], {} )
+ANSWER:
+    ParseResults( [ "ANSWER:", *line_of_text* ], { 'answer': *line_of_text* } )
+REGEXP: 
+    ParseResults( [ "REGEXP:", *line_of_text* ], { 'reg_exp': *line_of_text* } )'''
+
 format_number_answer = HiddenFormats.f_num_ans
 '''After parsing: \n
 ParseResults( [ "ANSWER:", *float_number_1*, *float_number2* ],
 { 'answer': *float_number1*, 'adm_err': *float_number_2* } )'''
+format_number_sectors = HiddenFormats.f_num_sect
+'''Will parse, if formats found: \n
+CONFIG:
+    ParseResults( [ "CONFIG" ], {} )
+ANSWER:
+    ParseResults( [ "ANSWER:", *float_number_1*, *float_number2* ],
+    { 'answer': *float_number1*, 'adm_err': *float_number_2* } )'''
+
 format_quiz_answer = HiddenFormats.f_quiz_ans
 '''After parsing: \n
 ParseResults( [ "ANSWER:", *arr_of_letters* ], { 'answer': *arr_of_letters* } )'''
 format_quiz_shuffle = HiddenFormats.f_quiz_shuff
 '''After parsing: \n
 ParseResults( [ "SHUFFLE:", *bool* ], { 'do_shuffle': *bool* } )'''
-format_lesson_id = HiddenFormats.f_les_id
+format_quiz_option = HiddenFormats.f_quiz_opt
 '''After parsing: \n
-ParseResults( [ "lesson", "=", *pos_integer* ], { 'lesson_id': *pos_integer* } )'''
+ParseResults( [ *AIKEN_option*, *line_of_text* ],
+{ 'letter': *AIKEN_option*, 'text': *line_of_text* } ) '''
+format_quiz_sectors = HiddenFormats.f_quiz_sect
+'''Will parse, if formats found: \n
+CONFIG:
+    ParseResults( [ "CONFIG" ], {} )
+TEXTBEGIN:
+    ParseResults
+TEXEND:
+    ParseResults
+ANSWER:
+    ParseResults( [ "ANSWER:", *arr_of_letters* ], { 'answer': *arr_of_letters* } )
+SHUFFLE:
+    ParseResults( [ "SHUFFLE:", *bool* ], { 'do_shuffle': *bool* } )
+OPTION:
+    ParseResults( [ *AIKEN_option*, *line_of_text* ],
+    { 'letter': *AIKEN_option*, 'text': *line_of_text* } )'''
 
-format_lesson_name = HiddenFormats.f_les_name
+format_taskinline_parameter = HiddenFormats.f_til_param
 '''After parsing: \n
-ParseResults( [ "#", *line_of_text* ], { 'lesson_name': *line_of_text* } )'''
-format_step_name = HiddenFormats.f_st_name
-'''After parsing: \n
-ParseResults( [ "##", *step_type*, *line_of_text* ], 
-{ 'type': *step_type*, 'step_name': *line_of_text* } )'''
+ParseResults( [ *parameter_name*, "=", *single_word* ],
+{ 'parameter': *parameter_name*, 'value': *single_word* } )'''
+format_taskinline_sectors = HiddenFormats.f_til_sect
+'''Will parse, if formats found: \n
+CONFIG:
+    ParseResults( [ "CONFIG" ], {} )
+CODE:
+    ParseResults( [ "CODE" ], {} )
+HEADER:
+    ParseResults( [ "HEADER" ], {} )
+FOOTER:
+    ParseResults( [ "FOOTER" ], {} )
+TEST:
+    ParseResults( [ "TEST"], {} )'''
 
 
 def search_format_in_text(
