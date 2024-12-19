@@ -126,7 +126,7 @@ class HiddenFormats:
 # ------  step sections  ----------------------------------------------------------------------------------------------
     # Step string
     f_str_ans = _ans + _safe_del_spaces + _rest_of_string("answer")
-    f_str_regexp = _reg_exp + _del_spaces + _rest_of_string("reg_exp")
+    f_str_regexp = _reg_exp + _del_spaces + _bool("reg_exp")
     f_str_sect = pp.Or([f_config, f_str_ans, f_str_regexp])
 
     # Step number
@@ -181,7 +181,7 @@ format_string_answer = HiddenFormats.f_str_ans
 ParseResults( [ "ANSWER:", *line_of_text* ], { 'answer': *line_of_text* } )'''
 format_string_reg_exp = HiddenFormats.f_str_regexp
 '''After parsing: \n
-ParseResults( [ "REGEXP:", *line_of_text* ], { 'reg_exp': *line_of_text* } )'''
+ParseResults( [ "REGEXP:", *bool* ], { 'reg_exp': *bool* } )'''
 format_string_sectors = HiddenFormats.f_str_sect
 '''Will parse, if formats found: \n
 CONFIG:

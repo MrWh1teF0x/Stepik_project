@@ -77,6 +77,10 @@ class StepString(StepType):
                 line, PPF.format_string_answer, _match_all=True
             ):
                 self.answer = PPF.match_format(line, PPF.format_string_answer)["answer"]
+            elif PPF.check_format(
+                line, PPF.format_string_reg_exp, _match_all=True
+            ):
+                self.use_re = PPF.match_format(line, PPF.format_string_reg_exp)["reg_exp"]
             else:
                 text.append(line)
         self.text = PPF.md_to_html(text)
