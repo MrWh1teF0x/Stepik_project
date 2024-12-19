@@ -257,14 +257,14 @@ got "{options[i][0]}" instead"""
                         "is_always_correct": False,
                         "is_html_enabled": True,  # allow html in options
                         "sample_size": len(self.answers),
-                        "is_multiple_choice": self.is_multiple_choice,
+                        "is_multiple_choice": bool(self.is_multiple_choice),
                         "preserve_order": not self.do_shuffle,
                         "is_options_feedback": False,
                     },
                 },
                 "lesson": self.lesson_id,
                 "position": self.position,
-                "cost": self.cost,
+                "cost": int(self.cost),
             }
         }
 
@@ -384,9 +384,9 @@ class StepTaskInLine(StepType):
                     "text": self.text,
                     "source": {
                         "code": self.code,
-                        "samples_count": self.samples_count,
-                        "execution_time_limit": self.execution_time_limit,
-                        "execution_memory_limit": self.execution_memory_limit,
+                        "samples_count": int(self.samples_count),
+                        "execution_time_limit": int(self.execution_time_limit),
+                        "execution_memory_limit": int(self.execution_memory_limit),
                         "templates_data": "",
                         "is_time_limit_scaled": True,
                         "is_memory_limit_scaled": True,
@@ -401,7 +401,7 @@ class StepTaskInLine(StepType):
                 },
                 "lesson": self.lesson_id,
                 "position": self.position,
-                "cost": self.cost,
+                "cost": int(self.cost),
             }
         }
 
