@@ -72,7 +72,7 @@ class StepString(StepType):
     def _parse(self, markdown: list[str]) -> None:
         text = []
         for line in markdown:
-            if not (self.answer is None) and PPF.check_format(line, PPF.format_string_answer, _match_all=True):
+            if self.answer is None and PPF.check_format(line, PPF.format_string_answer, _match_all=True):
                 self.answer = PPF.match_format(line, PPF.format_string_answer)["answer"]
             else:
                 text.append(line)
