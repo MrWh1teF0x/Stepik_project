@@ -1,6 +1,35 @@
 import click
 import yaml
 
+from src.parse_classes.lesson_parsers import Lesson
+from src.parse_classes.step_parsers import *
+from src.stepik_api.online_tokens import *
+from src.stepik_api.logged_session import *
+
+
+def update_lesson(file: str, lesson_id, step_number: int = None) -> None:
+    lesson = Lesson(file)
+    lesson.parse()
+    if lesson_id is None:
+        if lesson.id == -1:
+            raise AttributeError("Id of lesson is unknown!")
+        lesson_id = lesson.id
+
+    if step_number and step_number > 0:
+        step_number -= 1
+
+    online_steps: list[OnlineStep] = []
+    for i, step in enumerate(lesson.steps):
+        step.lesson_id = lesson_id
+        step.position = i
+        online_steps.append(OnlineStep(step))
+
+    online_lesson = OnlineLesson(id=lesson_id)
+    if step_number is None:
+        online_lesson.update(online_steps)
+    else:
+        online_lesson.steps[step_number].update(online_steps[step_number].step_data)
+
 
 @click.group()
 def cli():
@@ -37,27 +66,37 @@ def toc(filename, update, all, step):
     with open(filename, encoding="utf-8") as file:
         data = yaml.load(file, yaml.SafeLoader)
 
-    title = data["title"]
     course_id = data["course_id"]
-    base_dir = data["base_dir"]
+    lessons = data["toc"]
+    lesson_id = None
 
     if all:
-        ...  # Будет парс всех md-файлов и обновлены все уроки из каждого модуля
+        for lesson in lessons:
+            if "lesson_id" in data["toc"][lesson]:
+                lesson_id = data["toc"][lesson]["lesson_id"]
+            update_lesson(data["toc"][lesson]["path"], lesson_id)
+            lesson_id = None
 
     elif update:
         if update - int(update):
             if update not in data["toc"]:
                 raise KeyError(f"Урок {update} не существует!")
 
-            lesson_data = data["toc"][update]
-            ...  # Будет вызван парс всех файлов из модуля с номером section и обновлены все уроки модуля
-        else:
-            lessons = list(filter(lambda elem: int(elem) == update, data["toc"]))
+            if "lesson_id" in data["toc"][update]:
+                lesson_id = data["toc"][update]["lesson_id"]
+            update_lesson(lessons[update]["path"], lesson_id, step)
 
-            if lessons:
-                for lesson in lessons:
-                    lesson_data = data["toc"][lesson]
-                    ...  # Будет вызван парс файла и обновлен урок
+        else:
+            lessons_of_section = list(
+                filter(lambda elem: int(elem) == update, data["toc"])
+            )
+
+            if lessons_of_section:
+                for lesson in lessons_of_section:
+                    if "lesson_id" in data["toc"][lesson]:
+                        lesson_id = data["toc"][lesson]["lesson_id"]
+                    update_lesson(data["toc"][lesson]["path"], lesson_id)
+                    lesson_id = None
             else:
                 raise KeyError(f"Модуль {int(update)} не существует!")
     else:
@@ -82,20 +121,24 @@ def toc(filename, update, all, step):
 def lesson(filename, step, id, all):
     """Считывает файл и обновляет какой-то шаг или целый урок"""
 
-    if step and id or step and all or id and all:
+    if step and all:
         raise click.UsageError(
             "Вы должны использовать либо опцию -s, либо опцию --id, либо опцию --all"
         )
 
     if all:
-        ...  # Будет вызван парс файла и обновлены все шаги в уроке
+        update_lesson(filename, id)
     elif step:
-        ...  # Будет вызван парс файла и обновлен шаг с номером step
-    elif id:
-        ...  # Будет вызван парс файла и обновлен урок с lesson_id равным id
+        update_lesson(filename, id, step)
     else:
-        raise click.UsageError("Вы должны одну из опций: -s, --all или --id")
+        raise click.UsageError("Вы должны одну из опций: -s или --all")
+
+
+def main():
+    setup_logger(1, 1)
+    init_secret_fields()
 
 
 if __name__ == "__main__":
+    main()
     cli()

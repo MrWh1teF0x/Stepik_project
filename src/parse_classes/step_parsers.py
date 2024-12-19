@@ -1,11 +1,12 @@
-from dataclasses import field, dataclass
-import src.PyParseFormats as PPF
-from abc import ABC, abstractmethod
 import warnings
+import src.parse_classes.pyparse_formats as PPF
+
+from dataclasses import field, dataclass
+from abc import ABC, abstractmethod
 
 
 @dataclass
-class TypeStep(ABC):
+class StepType(ABC):
     title: str = ""
     text: str = ""
     cost: int = 0
@@ -13,14 +14,21 @@ class TypeStep(ABC):
     position: int = None
 
     def __repr__(self):
-        return f"TypeStep({self.title})"
+        return f"StepType('{self.title}')"
 
-    def __pre_parse(self, markdown: list[str]):
-        pass  # TODO: make title and config parsing
+    def _pre_parse(self, markdown: list[str]):
+        self.title = PPF.match_format(markdown[0], PPF.format_step_name)["step_name"]
+        markdown[0] = "## " + self.title
+
+        # TODO: parse for config
 
     @abstractmethod
-    def parse(self, markdown: list[str]) -> None:
+    def _parse(self, markdown: list[str]):
         pass
+
+    def parse(self, markdown: list[str]) -> None:
+        self._pre_parse(markdown)
+        self._parse(markdown)
 
     @abstractmethod
     def body(self) -> dict:
@@ -28,18 +36,11 @@ class TypeStep(ABC):
 
 
 @dataclass
-class StepText(TypeStep):
+class StepText(StepType):
     def __repr__(self):
-        return f"StepText({self.title})"
+        return f"StepText('{self.title}')"
 
-    def parse(self, markdown: list[str]) -> None:
-        if not PPF.check_format(markdown[0], PPF.format_step_text_name):
-            if not PPF.check_format(markdown[0], PPF.format_step_name):
-                raise SyntaxError(
-                    "Step:Text was set or written incorrectly - Impossible ERROR"
-                )
-        self.title = PPF.match_format(markdown[0], PPF.format_step_text_name)["step_name"]
-
+    def _parse(self, markdown: list[str]) -> None:
         self.text = PPF.md_to_html(markdown)
 
         self.body()
@@ -59,29 +60,30 @@ class StepText(TypeStep):
 
 
 @dataclass
-class StepString(TypeStep):
+class StepString(StepType):
     match_substring: bool = False
     case_sensitive: bool = False
     use_re: bool = False
-    answer: str = ""
+    answer: str | None = None
+    cost: int = 1
 
     def __repr__(self):
-        return f"StepString({self.title})"
+        return f"StepString('{self.title}')"
 
-    def parse(self, markdown: list[str]) -> None:
-        if not PPF.check_format(markdown[0], PPF.format_step_string_name, _from_start=True):
-            raise SyntaxError("Step:String was set incorrectly")
-
+    def _parse(self, markdown: list[str]) -> None:
         text = []
         for line in markdown:
-            if PPF.check_format(line, PPF.format_string_answer, _from_start=True):
-                # TODO: might want to check for a several answer tokens
+            if self.answer is None and PPF.check_format(
+                line, PPF.format_string_answer, _match_all=True
+            ):
                 self.answer = PPF.match_format(line, PPF.format_string_answer)["answer"]
+            elif PPF.check_format(
+                line, PPF.format_string_reg_exp, _match_all=True
+            ):
+                self.use_re = PPF.match_format(line, PPF.format_string_reg_exp)["reg_exp"]
             else:
                 text.append(line)
         self.text = PPF.md_to_html(text)
-
-        self.body()
 
     def body(self) -> dict:
         return {
@@ -107,20 +109,18 @@ class StepString(TypeStep):
 
 
 @dataclass
-class StepNumber(TypeStep):
+class StepNumber(StepType):
     answer: float = None
-    max_error: float = None
+    max_error: float = 0
+    cost: int = 1
 
     def __repr__(self):
-        return f"StepNumber({self.title})"
+        return f"StepNumber('{self.title}')"
 
-    def parse(self, markdown: list[str]) -> None:
-        if not PPF.check_format(markdown[0], PPF.format_step_number_name, _from_start=True):
-            raise SyntaxError("Step:Number was set incorrectly")
-
+    def _parse(self, markdown: list[str]) -> None:
         text = []
         for line in markdown:
-            if PPF.check_format(line, PPF.format_number_answer, _from_start=True):
+            if PPF.check_format(line, PPF.format_number_answer, _match_all=True):
                 a = PPF.match_format(line, PPF.format_number_answer)
                 self.answer = a["answer"]
                 self.max_error = a.get("adm_err", 0)
@@ -154,90 +154,100 @@ class StepNumber(TypeStep):
 
 
 @dataclass
-class StepQuiz(TypeStep):
+class StepQuiz(StepType):
     answers: list[tuple[str, bool]] = field(default_factory=list)
     do_shuffle: bool = True
+    is_multiple_choice: bool = True
+    cost: int = 1
 
     def __repr__(self):
-        return f"StepQuiz()"
+        return f"StepQuiz('{self.title}')"
 
-    def parse(self, markdown: list[str]) -> None:
-        if not PPF.check_format(markdown[0], PPF.format_step_number_name, _from_start=True):
-            raise SyntaxError("Step:Number was set incorrectly")
-
+    def _parse(self, markdown: list[str]) -> None:
         text, options = [], []
-        status, i, running = "None", 0, True
+        status, line_i, running = "None", 0, True
         # parse for text ------------------------------------------------------
         while running:
-            line = markdown[i]
+            line = markdown[line_i]
 
-            if PPF.check_format(line, PPF.format_text_begin, _from_start=True):
+            if PPF.check_format(line, PPF.format_text_begin, _match_all=True):
                 status = "Text"
                 text.append(PPF.match_format(line, PPF.format_text_begin)["text"])
-                i += 1
-                while i < len(markdown) and status == "Text":
-                    text.append(markdown[i])
-                    if PPF.check_format(markdown[i], PPF.format_text_end, _from_start=True):
+                line_i += 1
+                while line_i < len(markdown) and status == "Text":
+                    text.append(markdown[line_i])
+                    if PPF.check_format(
+                        markdown[line_i], PPF.format_text_end, _match_all=True
+                    ):
                         status = "None"
                         text.pop(-1)
-                    i += 1
+                    line_i += 1
 
                 if status == "Text":
                     raise SyntaxError(f"In {self}: no closure TEXTEND for TEXTBEGIN")
             elif not PPF.check_format(line, PPF.format_quiz_option):
                 text.append(line)
-                i += 1
+                line_i += 1
             else:
                 p_res = PPF.match_format(line, PPF.format_quiz_option)
                 if p_res["letter"] == "A":
                     running = False
                 else:
-                    i += 1
+                    line_i += 1
 
-            if i >= len(markdown):
+            if line_i >= len(markdown):
                 raise SyntaxError(f"In {self}: no AIKEN quiz options given")
 
         # parse for quiz options ----------------------------------------------
         running = True
         while running:
-            line = markdown[i]
+            line = markdown[line_i]
             if PPF.check_format(line, PPF.format_quiz_option):
                 p_res = PPF.match_format(line, PPF.format_quiz_option)
                 options.append([p_res["letter"], [p_res["text"]]])
-                i += 1
-            elif not PPF.check_format(line, PPF.format_quiz_answer) or \
-                    not PPF.check_format(line, PPF.format_quiz_shuffle):
+                line_i += 1
+            elif not PPF.check_format(
+                line, PPF.format_quiz_answer
+            ) and not PPF.check_format(line, PPF.format_quiz_shuffle):
                 options[-1][1].append(line)
-                i += 1
+                line_i += 1
             else:
                 running = False
 
-            if i >= len(markdown):
+            if line_i >= len(markdown):
                 raise SyntaxError(f"In {self}: no ANSWER(s) given")
 
         for i in range(1, len(options)):
             if ord(options[i][0]) - ord(options[i - 1][0]) != 1:
                 raise SyntaxError(
                     f"""In {self}: expected "{chr(ord(options[i - 1][0]) + 1)}" after "{options[i - 1][0]}", \
-got "{options[i][0]}" instead""")
+got "{options[i][0]}" instead"""
+                )
 
         # parse for params and answer options ---------------------------------
         ans = set()
         do_shuffle = None
         running = True
         while running:
-            line = markdown[i]
+            line = markdown[line_i]
             if not ans and PPF.check_format(line, PPF.format_quiz_answer):
                 ans = set(PPF.match_format(line, PPF.format_quiz_answer)["answer"])
-            elif (do_shuffle is None) and PPF.check_format(line, PPF.format_quiz_shuffle):
-                do_shuffle = PPF.match_format(line, PPF.format_quiz_shuffle)["do_shuffle"]
+            elif (do_shuffle is None) and PPF.check_format(
+                line, PPF.format_quiz_shuffle
+            ):
+                do_shuffle = PPF.match_format(line, PPF.format_quiz_shuffle)[
+                    "do_shuffle"
+                ]
 
-            i += 1
-            if i >= len(markdown):
+            line_i += 1
+            if line_i >= len(markdown):
                 running = False
 
         self.text = PPF.md_to_html(text)
-        self.answers = [(PPF.md_to_html(text), letter in ans) for letter, text in options]
+        self.answers = [
+            (PPF.md_to_html(text), letter in ans) for letter, text in options
+        ]
+        self.is_multiple_choice = len(ans) > 1
         self.do_shuffle = self.do_shuffle if do_shuffle is None else do_shuffle
 
         self.body()
@@ -256,14 +266,14 @@ got "{options[i][0]}" instead""")
                         "is_always_correct": False,
                         "is_html_enabled": True,  # allow html in options
                         "sample_size": len(self.answers),
-                        "is_multiple_choice": len(self.answers) > 1,
+                        "is_multiple_choice": bool(self.is_multiple_choice),
                         "preserve_order": not self.do_shuffle,
                         "is_options_feedback": False,
                     },
                 },
                 "lesson": self.lesson_id,
                 "position": self.position,
-                "cost": self.cost,
+                "cost": int(self.cost),
             }
         }
 
@@ -274,15 +284,115 @@ class TaskTest:
     output: str = ""
 
 
-class StepTask(TypeStep):
+class StepTaskInLine(StepType):
     code: str = ""
+    pre_code: str = ""
+    post_code: str = ""
+    test_cases: list[TaskTest] = field(default_factory=list)
+    # config params
+    code_lang: str = ""
     samples_count: int = 1
     execution_time_limit: int = 5
     execution_memory_limit: int = 256
-    test_cases: list[TaskTest] = field(default_factory=list)
 
-    def parse(self, markdown: list[str]) -> None:
-        pass
+    def __repr__(self):
+        return f"StepTaskInLine('{self.title}')"
+
+    def _parse(self, markdown: list[str]) -> None:
+        default_section_parse = self._parse_text
+        sections = {
+            "CONFIG": self._parse_config,
+            "CODE": self._parse_code,
+            "HEADER": self._parse_header,
+            "FOOTER": self._parse_footer,
+            "TEST": self._parse_tests,
+            "": None,
+        }
+
+        section_list = PPF.search_format_in_text(
+            markdown, PPF.format_taskinline_sectors, _from_start=True
+        )
+        section_list.append(
+            (None, len(markdown), 0, 0)
+        )  # so that last section will parse
+
+        if len(section_list) != 0:
+            default_section_parse(markdown[: section_list[0][1]])
+            for i in range(len(section_list) - 1):
+                k = section_list[i][0].get("section_type", "")
+                parse_func = sections[k]
+                section_text = markdown[section_list[i][1] : section_list[i + 1][1]]
+                if parse_func is not None:
+                    parse_func(section_text)
+                else:
+                    default_section_parse(section_text)
+                    warnings.warn(
+                        f"Wrong section token in {self}: {section_list[i][0]}",
+                        Warning,
+                        stacklevel=2,
+                    )
+
+    def _parse_text(self, markdown: list[str]):
+        self.text = PPF.md_to_html(markdown)
+
+    def _parse_code(self, markdown: list[str]):
+        self.code = "\n".join(markdown[1:])
+
+    def _parse_header(self, markdown: list[str]):
+        self.pre_code = "\n".join(markdown[1:])
+
+    def _parse_footer(self, markdown: list[str]):
+        self.post_code = "\n".join(markdown[1:])
+
+    def _parse_tests(self, markdown: list[str]):
+        self.test_cases = []
+
+        test = [[], []]
+        state = "input"
+        for i in range(1, len(markdown)):
+            if PPF.check_format(markdown[i], PPF.format_test_data_seperator):
+                if state != "input":
+                    warnings.warn(
+                        f"Wrong test format in {self}: IN->OUT seperator in wrong place (testline index: {i})",
+                        Warning,
+                        stacklevel=2,
+                    )
+                    return
+                state = "output"
+            elif PPF.check_format(markdown[i], PPF.format_tests_seperator):
+                self.test_cases.append(TaskTest("\n".join(test[0]), "\n".join(test[1])))
+                test = [[], []]
+                state = "input"
+
+            elif state == "input":
+                test[0].append(markdown[i])
+            elif state == "output":
+                test[1].append(markdown[i])
+
+    def _parse_config(self, markdown: list[str]):
+        for i in range(1, len(markdown)):
+            res = PPF.match_format(markdown[i], PPF.format_taskinline_parameter)
+            if not res.asList():
+                continue
+
+            if hasattr(self, res["parameter"]):
+                setattr(self, res["parameter"], res["value"])
+            else:
+                warnings.warn(
+                    f"In {self}: config section has excessive parameter - '{res['parameter']}'"
+                )
+
+    def build_code_template(self):
+        if not self.code_lang:
+            return ""
+        s = f"::{self.code_lang}\n"
+        if self.pre_code:
+            s = s + "::header\n" + self.pre_code + "\n"
+        if self.code:
+            s = s + "::code\n" + self.code + '\n'
+        if self.post_code:
+            s = s + "::footer\n" + self.post_code + "\n"
+        return s
 
     def body(self) -> dict:
         return {
@@ -292,9 +402,9 @@ class StepTask(TypeStep):
                     "text": self.text,
                     "source": {
                         "code": "def generate():\n    return []\n\ndef check(reply, clue):\n    return reply.strip() == clue.strip()\n",
-                        "samples_count": self.samples_count,
-                        "execution_time_limit": self.execution_time_limit,
-                        "execution_memory_limit": self.execution_memory_limit,
+                        "samples_count": int(self.samples_count),
+                        "execution_time_limit": int(self.execution_time_limit),
+                        "execution_memory_limit": int(self.execution_memory_limit),
                         "templates_data": "",
                         "is_time_limit_scaled": True,
                         "is_memory_limit_scaled": True,
@@ -309,16 +419,17 @@ class StepTask(TypeStep):
                 },
                 "lesson": self.lesson_id,
                 "position": self.position,
-                "cost": self.cost,
+                "cost": int(self.cost),
             }
         }
 
 
 @dataclass
-class StepSort(TypeStep):
+class StepSort(StepType):
     sorted_answers: list[str] = field(default_factory=list)
+    cost: int = 5
 
-    def parse(self, markdown: list[str]) -> None:
+    def _parse(self, markdown: list[str]) -> None:
         pass
 
     def body(self) -> dict:
@@ -345,11 +456,12 @@ class MatchPair:
 
 
 @dataclass
-class StepMatch(TypeStep):
+class StepMatch(StepType):
     preserve_firsts_order: bool = True
     pairs: list[MatchPair] = field(default_factory=list)
+    cost: int = 5
 
-    def parse(self, markdown: list[str]) -> None:
+    def _parse(self, markdown: list[str]) -> None:
         pass
 
     def body(self) -> dict:
@@ -398,6 +510,9 @@ class Answer:
 class BlankInput(BlankType):
     answers: list[Answer] = field(default_factory=list)
 
+    def _parse(self, markdown: list[str]) -> None:
+        pass
+
     def body(self) -> dict:
         return {
             "type": "input",
@@ -413,6 +528,9 @@ class BlankInput(BlankType):
 class BlankSelect(BlankType):
     answers: list[Answer] = field(default_factory=list)
 
+    def _parse(self, markdown: list[str]) -> None:
+        pass
+
     def body(self) -> dict:
         return {
             "type": "select",
@@ -425,13 +543,14 @@ class BlankSelect(BlankType):
 
 
 @dataclass
-class StepFill(TypeStep):
+class StepFill(StepType):
     is_case_sensitive: bool = False
     is_detailed_feedback: bool = False
     is_partially_correct: bool = False
     components: list[BlankType] = field(default_factory=list)
+    cost: int = 5
 
-    def parse(self, markdown: list[str]) -> None:
+    def _parse(self, markdown: list[str]) -> None:
         pass
 
     def body(self) -> dict:
@@ -473,14 +592,15 @@ class Table:
 
 
 @dataclass
-class StepTable(TypeStep):
+class StepTable(StepType):
     table: Table = None
     is_randomize_rows: bool = False
     is_randomize_columns: bool = False
     is_always_correct: bool = False
     description: str = ""
+    cost: int = 10
 
-    def parse(self, markdown: list[str]) -> None:
+    def _parse(self, markdown: list[str]) -> None:
         pass
 
     def body(self) -> dict:
@@ -509,11 +629,13 @@ class StepTable(TypeStep):
         }
 
 
-STEP_MAP = {
-    PPF.format_step_text_name: StepText,
-    PPF.format_step_string_name: StepString,
-    PPF.format_step_number_name: StepNumber,
-    PPF.format_step_quiz_name: StepQuiz,
-}
+default_step = StepText
 
-default_step_format = StepText
+STEP_MAP = {
+    "": default_step,
+    "TEXT": StepText,
+    "STRING": StepString,
+    "NUMBER": StepNumber,
+    "QUIZ": StepQuiz,
+    "TASKINLINE": StepTaskInLine,
+}

@@ -1,8 +1,7 @@
-import requests
 import json
-from dataclasses import dataclass, field
 
-from src.stepik_api.types_of_step import *
+from dataclasses import dataclass, field
+from src.parse_classes.step_parsers import *
 from src.stepik_api.logged_session import LoggedSession as Session
 
 
@@ -33,7 +32,10 @@ class OnlineStep:
         )
 
         json_data = json.loads(responce.text)
-        self.id = json_data["step-sources"][0]["id"]
+        try:
+            self.id = json_data["step-sources"][0]["id"]
+        except Exception as e:
+            raise Exception("Invalid json data in step!")
 
     def update(self, step_data: StepType = None):
         if step_data:
