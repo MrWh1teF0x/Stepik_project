@@ -26,10 +26,10 @@ class URLifyExtension(Extension):
 
 
 def md_to_html(md_text: list[str] | str):
-    urlify_ext = URLifyExtension()
+    #urlify_ext = URLifyExtension()
     if isinstance(md_text, list):
         md_text = "\n".join(md_text)
-    extentions = [urlify_ext, "extra"]
+    extentions = ["extra"] #urlify_ext
     return md.markdown(md_text, extensions=extentions)
 
 
