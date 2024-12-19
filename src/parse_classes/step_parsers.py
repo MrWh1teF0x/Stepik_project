@@ -369,9 +369,10 @@ class StepTaskInLine(StepType):
         if not self.code_lang:
             return ''
         s = f'::{self.code_lang}\n'
-        s = s + "::code\n"
         if self.pre_code:
             s = s + '::header\n' + self.pre_code + '\n'
+        if self.code:
+            s = s + "::code\n" + self.code + '\n'
         if self.post_code:
             s = s + '::footer\n' + self.post_code + '\n'
         return s

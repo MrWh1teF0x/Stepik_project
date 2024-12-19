@@ -1,7 +1,7 @@
 import os
 import pprint
 
-from src.parse_classes.step_parsers import StepTaskInLine
+from src.parse_classes.step_parsers import StepTaskInLine, StepQuiz
 import pytest
 
 from src.parse_classes.lesson_parsers import Lesson
@@ -363,7 +363,7 @@ def test_Steps_creation():
     if __do_debug:
         print(lesson2.f_path)
         print(lesson2.steps)
-        print(*lesson2.steps[5].answers, sep='\n')
+        pprint.pprint(lesson2.steps[-1].body())
 
     lesson3 = Lesson(r"..\files\sample_2.md")
     lesson3.parse()
@@ -442,6 +442,11 @@ sq(a)
 
 ANSWER: A, D
 """.split('\n')
+    step = StepQuiz()
+    step.parse(text)
+    if __do_debug:
+        print([step.answers])
+        pprint.pprint(step.body())
 
 
 def test_Step_TaskInLine():

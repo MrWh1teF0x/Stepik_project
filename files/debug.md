@@ -149,7 +149,7 @@ x1, y1, x2, y2 = map(float, input().split())    # читаем числа
 d = dist(x1, y1, x2, y2)                        # вызываем функцию
 print(d)                                        # печатаем результат
 
-# TASKINLINE Сумма
+## TASKINLINE Сумма
 Даны два нецелых числа через пробел. Напечатайте их сумму.
 HEADER
 #include <stdio.h>
@@ -167,6 +167,7 @@ CODE
 CONFIG
 cost = 3
 samples_count = 2
+code_lang = c++20
 checker = std_float_seq
 TEST
 0.1 0.2
