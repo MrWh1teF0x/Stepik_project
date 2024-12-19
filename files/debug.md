@@ -65,29 +65,21 @@ def sq(size):
 TEXTEND
 
 A.
-```python
 a = int(input())
 sq(a)
-```
 
 B.
-```python
 a = input()
 sq(a)
-```
 
 C.
-```python
 a = len(input())
 sq(a)
-```
 
 D.
-```python
 a = input()
 a = int(a)
 sq(a)
-```
 
 ANSWER: A, D
 
