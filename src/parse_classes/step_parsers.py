@@ -65,6 +65,7 @@ class StepString(StepType):
     case_sensitive: bool = False
     use_re: bool = False
     answer: str | None = None
+    cost: int = 1
 
     def __repr__(self):
         return f"StepString('{self.title}')"
@@ -72,7 +73,9 @@ class StepString(StepType):
     def _parse(self, markdown: list[str]) -> None:
         text = []
         for line in markdown:
-            if self.answer is None and PPF.check_format(line, PPF.format_string_answer, _match_all=True):
+            if self.answer is None and PPF.check_format(
+                line, PPF.format_string_answer, _match_all=True
+            ):
                 self.answer = PPF.match_format(line, PPF.format_string_answer)["answer"]
             else:
                 text.append(line)
