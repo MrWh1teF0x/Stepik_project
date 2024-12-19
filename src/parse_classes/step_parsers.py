@@ -169,7 +169,9 @@ class StepQuiz(StepType):
                 line_i += 1
                 while line_i < len(markdown) and status == "Text":
                     text.append(markdown[line_i])
-                    if PPF.check_format(markdown[line_i], PPF.format_text_end, _match_all=True):
+                    if PPF.check_format(
+                        markdown[line_i], PPF.format_text_end, _match_all=True
+                    ):
                         status = "None"
                         text.pop(-1)
                     line_i += 1
@@ -291,30 +293,37 @@ class StepTaskInLine(StepType):
 
     def _parse(self, markdown: list[str]) -> None:
         default_section_parse = self._parse_text
-        sections = {"CONFIG": self._parse_config,
-                    "CODE": self._parse_code,
-                    "HEADER": self._parse_header,
-                    "FOOTER": self._parse_footer,
-                    "TEST": self._parse_tests,
-                    "": None, }
+        sections = {
+            "CONFIG": self._parse_config,
+            "CODE": self._parse_code,
+            "HEADER": self._parse_header,
+            "FOOTER": self._parse_footer,
+            "TEST": self._parse_tests,
+            "": None,
+        }
 
         section_list = PPF.search_format_in_text(
-            markdown, PPF.format_taskinline_sectors, _from_start=True)
-        section_list.append((None, len(markdown), 0, 0))  # so that last section will parse
+            markdown, PPF.format_taskinline_sectors, _from_start=True
+        )
+        section_list.append(
+            (None, len(markdown), 0, 0)
+        )  # so that last section will parse
 
         if len(section_list) != 0:
-            default_section_parse(markdown[:section_list[0][1]])
+            default_section_parse(markdown[: section_list[0][1]])
             for i in range(len(section_list) - 1):
                 k = section_list[i][0].get("section_type", "")
                 parse_func = sections[k]
-                section_text = markdown[section_list[i][1]:section_list[i + 1][1]]
+                section_text = markdown[section_list[i][1] : section_list[i + 1][1]]
                 if parse_func is not None:
                     parse_func(section_text)
                 else:
                     default_section_parse(section_text)
                     warnings.warn(
                         f"Wrong section token in {self}: {section_list[i][0]}",
-                        Warning, stacklevel=2)
+                        Warning,
+                        stacklevel=2,
+                    )
 
     def _parse_text(self, markdown: list[str]):
         self.text = PPF.md_to_html(markdown)
@@ -338,7 +347,8 @@ class StepTaskInLine(StepType):
                 if state != "input":
                     warnings.warn(
                         f"Wrong test format in {self}: IN->OUT seperator in wrong place (testline index: {i})",
-                        Warning, stacklevel=2
+                        Warning,
+                        stacklevel=2,
                     )
                     return
                 state = "output"
@@ -358,8 +368,8 @@ class StepTaskInLine(StepType):
             if not res.asList():
                 continue
 
-            if hasattr(self, res['parameter']):
-                setattr(self, res['parameter'], res['value'])
+            if hasattr(self, res["parameter"]):
+                setattr(self, res["parameter"], res["value"])
             else:
                 warnings.warn(
                     f"In {self}: config section has excessive parameter - '{res['parameter']}'"
@@ -367,14 +377,13 @@ class StepTaskInLine(StepType):
 
     def build_code_template(self):
         if not self.code_lang:
-            return ''
-        s = f'::{self.code_lang}\n'
+            return ""
+        s = f"::{self.code_lang}\n"
+        s = s + "::code\n"
         if self.pre_code:
-            s = s + '::header\n' + self.pre_code + '\n'
-        if self.code:
-            s = s + "::code\n" + self.code + '\n'
+            s = s + "::header\n" + self.pre_code + "\n"
         if self.post_code:
-            s = s + '::footer\n' + self.post_code + '\n'
+            s = s + "::footer\n" + self.post_code + "\n"
         return s
 
     def body(self) -> dict:
@@ -384,7 +393,7 @@ class StepTaskInLine(StepType):
                     "name": "code",
                     "text": self.text,
                     "source": {
-                        "code": self.code,
+                        "code": "def generate():\n    return []\n\ndef check(reply, clue):\n    return reply.strip() == clue.strip()\n",
                         "samples_count": int(self.samples_count),
                         "execution_time_limit": int(self.execution_time_limit),
                         "execution_memory_limit": int(self.execution_memory_limit),
