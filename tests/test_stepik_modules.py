@@ -7,7 +7,7 @@ import pytest
 from src.parse_classes.lesson_parsers import Lesson
 from src.parse_classes.pyparse_formats import *
 
-__do_debug = False
+__do_debug = True
 
 
 def test_Lesson_init():
@@ -363,6 +363,7 @@ def test_Steps_creation():
     if __do_debug:
         print(lesson2.f_path)
         print(lesson2.steps)
+        print(*lesson2.steps[5].answers, sep='\n')
 
     lesson3 = Lesson(r"..\files\sample_2.md")
     lesson3.parse()
@@ -403,15 +404,44 @@ def test_Steps_formats():
 
 
 def test_Step_Quiz():
-    text = ["## QUIZ quiz",
-            "some text",
-            "more text",
-            "",
-            "A) a"
-            "B) b"
-            "",
-            "ANSWER: A, B"
-            ]
+    text = """## QUIZ Прочитать размер стороны
+TEXTBEGIN
+Нужно прочитать длину стороны квадрата и передать ее в функцию sq. Какой код написан правильно?
+```python
+def sq(size):
+    for i in range(4):
+        t.fd(size)
+        t.lt(90)
+```
+TEXTEND
+
+A.
+```python
+a = int(input())
+sq(a)
+```
+
+B.
+```python
+a = input()
+sq(a)
+```
+
+C.
+```python
+a = len(input())
+sq(a)
+```
+
+D.
+```python
+a = input()
+a = int(a)
+sq(a)
+```
+
+ANSWER: A, D
+""".split('\n')
 
 
 def test_Step_TaskInLine():
